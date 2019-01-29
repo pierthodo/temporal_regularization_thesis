@@ -1,0 +1,225 @@
+% Packages (fold)
+\RequirePackage{lmodern}
+\documentclass[12pt, oneside, extrafontsizes]{memoir}  % TODO 12pt, twoside
+
+\setstocksize{11in}{8.5in}
+\settrimmedsize{11in}{8.5in}{*}
+\settrims{0in}{0in}
+\setlrmarginsandblock{38mm}{25mm}{*}
+\setulmarginsandblock{25mm}{25mm}{*}
+\setheadfoot{13pt}{26pt}
+\setheaderspaces{*}{13pt}{*}
+\checkandfixthelayout
+\DoubleSpacing
+\setsecnumdepth{subsubsection}
+\headstyles{default}
+\chapterstyle{ell}
+\setsecheadstyle{\scshape\LARGE\raggedright}
+
+\usepackage[colorlinks,bookmarksnumbered,bookmarksdepth=subsubsection,unicode=true]{hyperref}
+\newsubfloat{figure}  % must follow hyperref
+\hypersetup{
+pdfauthor = {Pierre Thodoroff},
+pdftitle = {Temporal Regularization for Markov Decision Process},
+pdfsubject = {Subject},
+pdfkeywords = {reinforcement learning},
+pdfcreator = {LaTeX with the hyperref package},
+pdfproducer = {},
+linkcolor = [HTML]{000000},
+citecolor = [HTML]{0000FF},
+}
+\usepackage[utf8]{inputenc}
+\usepackage{csquotes}
+\usepackage{showidx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{dsfont}
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{bbm}
+\usetikzlibrary{shapes,arrows}
+\usepackage{standalone}
+\usepackage[boxed]{algorithm2e}
+\usepackage{amsmath,algorithmic,algorithm,setspace}
+
+
+% Custom commands
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollaries}{Corollary}
+\newtheorem{property}{Property}
+\newtheorem*{remark}{Remark}
+\usetikzlibrary{shapes,arrows}
+\usepackage{standalone}
+\usepackage[boxed]{algorithm2e}
+\newcommand{\param}{\beta}
+\newcommand{\s}{\mathcal{S}}
+\newcommand{\p}{\mathcal{P}}
+\newcommand{\pol}{\pi}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\Q}{Q}
+\newcommand{\Vr}{\V_{\param}}
+\newcommand{\V}{V}
+\newcommand{\regT}{\T^{\pol}_{\param}}
+\newcommand{\regTo}{\T^{*}_{\param}}
+\newcommand{\expect}{\mathop{\mathbb{E}}}
+\newcommand{\RE}{r}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\dr}{\widetilde{\delta}}
+\newcommand{\qr}{\widetilde{Q}}
+\newcommand{\pit}{\widetilde{\pi}}
+\newcommand{\vr}{V^{\param}_{\theta}}
+\newcommand{\vrb}{V^{\param}_{\theta,\omega}}
+\newcommand{\Vt}{V_{\theta}}
+\newcommand{\Vb}{V_{\theta,\omega}}
+
+\newcommand{\Vm}{V_{\text{max}}}
+\newcommand{\Rm}{R_{\text{max}}}
+\newcommand{\Tvan}{\T^{\infty}_{\param}}
+\makeindex
+
+\usepackage[backend=biber, citestyle=authoryear, bibstyle=authoryear, isbn=false, url=false, doi=false, eprint=false, natbib=false, sorting=nty, uniquename=init]{biblatex}
+\addbibresource{library.bib}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Title (fold)
+\pretitle{\begin{center}\cftchapterfont\huge}
+\posttitle{\end{center}}
+\preauthor{\begin{center}\huge}
+\postauthor{\end{center}}
+\predate{\begin{center}\large}
+\postdate{\end{center}}
+
+\title{Temporal Regularization for Markov Decision Process }
+\author{Pierre Thodoroff}
+\date{\today}
+\renewcommand\maketitlehookb{
+\vfill
+}
+\renewcommand\maketitlehookc{
+\vfill
+\begin{center}
+{
+\large
+Computer Science\\
+McGill University, Montreal
+}
+\end{center}
+\vspace{10mm}
+}
+\renewcommand\maketitlehookd{
+\vspace{10mm}
+A thesis submitted to McGill University in partial fulfilment of the requirements of
+the degree of Master of Science.
+\copyright Pierre Thodoroff; \today.
+}
+% Title (end)
+
+\begin{titlingpage}
+\maketitle
+\end{titlingpage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ackowledgements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\clearpage
+%\pagenumbering{roman}
+%\renewcommand{\abstractname}{Dedication}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ackowledgements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\pagenumbering{roman}
+\renewcommand{\abstractname}{Acknowledgements}
+\begin{abstract}
+TODO
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Abstract
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\renewcommand{\abstractname}{Abstract}
+\begin{abstract}
+Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  This paper explores a class of methods for temporal regularization. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics of temporal regularization via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Abrégé
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\renewcommand{\abstractname}{Résumé}
+\begin{abstract}
+Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  This paper explores a class of methods for temporal regularization. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics of temporal regularization via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Table of content
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\setcounter{tocdepth}{2}
+\tableofcontents
+%\newpage
+%\listoffigures
+%\listofalgorithms
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\pagenumbering{arabic}
+\chapter{Introduction}
+\input{chapters/introduction}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Background
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Markov Chains}
+\label{chap:markov}
+\input{chapters/markov}
+
+\chapter{Reinforcement Learning}
+\label{chap:reinforcement}
+\input{chapters/reinforcement}
+
+\chapter{Regularization in Markov Decision Process}
+\label{chap:regularization}
+\input{chapters/regularization.tex}
+
+\chapter{Temporal Regularization}
+\label{chap:temporal}
+\input{chapters/temporal}
+
+
+\chapter{Recurrent Learning}
+\label{chap:recurrent}
+\input{chapters/recurrent}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Conclusion
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Conclusion}
+\input{chapters/conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\bibliography{library}
+%\bibliographystyle{plain}
+\printbibliography
+\end{document}
