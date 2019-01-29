@@ -58,7 +58,8 @@ However, in practice we have access to a noisy version of the operator $\widetil
 \begin{equation}
     w(t) = r_t + \gamma \Vt (s_{t+1}) - \expect_{s_{t+1} \sim \pol} [r + \gamma \Vt(s_{t+1})]
 \end{equation}
-%COMMENT(pierre-luc) : I would merge this section with the above. Both sections are pretty small and there is no need to separate them as subsubsections.
+
+
 
 \section{Recurrent Learning in Reinforcement Learning}
 \label{RLRL}
@@ -118,8 +119,23 @@ For any $i \leq t$ where $\param_i \in (0,1]$, it is possible to express $\vr(s_
     \Delta_t(s_i) &= (1-C_t(s_i))(\Vt(s_i) - \widetilde{V}_t(s_i) ) 
 \end{split}
 \end{equation}
-where $C_t(s_i) = \param_i \prod_{p=i+1}^t (1-\param_p)$, $\widetilde{V}_t(s_t)$ is a convex combination of all $\Vt$ encountered in the trajectory except $\Vt(s_i)$ weighted by their respective contribution($\param$) to the estimate $\vr(s_t)$. For example, if we consider updating $\Vt(s_2)$ at $t=3$ and have the following $\param_1 = 0.9,\param_2 = 0.1,\param_3 = 0.1$. The value of $\widetilde{V}_3(s_2)$ will be mainly composed of $\Vt(s_1)$. The main component of the error will be $V^{\pol}(s_3) - \Vt(s_1)$. An example on how to obtain this decomposition can be found in the section \ref{decompose_app} of the appendix. 
-Every update to $\Vt(s_i)$ made during the trajectory at time step $t$ can be decomposed as follows:
+where $C_t(s_i) = \param_i \prod_{p=i+1}^t (1-\param_p)$, $\widetilde{V}_t(s_t)$ is a convex combination of all $\Vt$ encountered in the trajectory except $\Vt(s_i)$ weighted by their respective contribution($\param$) to the estimate $\vr(s_t)$. For example, if we consider updating $\Vt(s_2)$ at $t=3$ and have the following $\param_1 = 0.9,\param_2 = 0.1,\param_3 = 0.1$. The value of $\widetilde{V}_3(s_2)$ will be mainly composed of $\Vt(s_1)$. The main component of the error will be $V^{\pol}(s_3) - \Vt(s_1)$. We take an example with $t=3$ and consider $i=2$:
+\begin{equation}
+    \begin{split}
+        \vr(s_3) &= \param_3 \V(s_3) + (1-\param_3)\param_2 \V(s_2) + (1-\param_3)(1-\param_2)  \V(s_1)\\
+        &= \V(s_2) - (1-(1-\param_3)\param_2)(\V(s_2) - \frac{\param_3 \V(s_3) + (1-\param_3)(1-\param_2)  \V(s_1)}{(1-(1-\param_3)\param_2)})\\
+        &= \V(s_2) - (1-(1-\param_3)\param_2)(\V(s_2) - \widetilde{V}_t(s_i))
+    \end{split}
+\end{equation}
+To see that $\widetilde{V}$ is a convex combination of the all the $\V$ encountered along the trajectory weight by $\param$ except $V(s_2)$ it suffices to see that:
+\begin{equation}
+    \begin{split}
+        & \frac{\param_3  + (1-\param_3)(1-\param_2)  }{(1-(1-\param_3)\param_2)} = 1 \\
+        &\equiv \param_3  + (1-\param_3)(1-\param_2)  = (1-(1-\param_3)\param_2) \\
+        &\equiv \param_3 + (1-\param_3)\param_2 + (1-\param_3)(1-\param_2) = 1
+    \end{split}
+\end{equation}
+where the last line is true because $\param \in (0,1]$Every update to $\Vt(s_i)$ made during the trajectory at time step $t$ can be decomposed as follows:
 \begin{equation}
 \label{decompose}
 \begin{split}
@@ -167,16 +183,68 @@ Define $V_{\max} = \frac{R_{\max}}{1-(\gamma+(1-D))}$ and $V_{\min} = \frac{R_{\
     \item For a given $D$ and $\gamma$ we select $C$ such that $\Delta \leq (1-C)(V_{\max}-V_{\min}) \leq (1-D)V_{\min}$
 \end{itemize}
 \end{theorem}
-Due to space constraints we outline important details of the proof here. A full version can be found in the appendix \ref{proof}. For two sets of value function $U,V \in X$:
+\begin{proof}
+The first step is to prove that $\T^{\param}$ maps to itself for any noisy update $\widetilde{\T^{\param}}$. 
+From 2) we know that
+$(1-C) V_{\max} - V_{\min} < D V_{\min} \leq D V_{\max}$ we can then deduce that
+\begin{equation}
+    \begin{split}
+        \widetilde{\T^{\param}}\V(s) &\leq R_{\max} + \gamma V_{\max} +(1-C)(V_{\max} - V_{\min}) \\
+        &\leq R_{\max} + (\gamma+(1-D)) V_{\max} \\
+        &\leq V_{\max}
+    \end{split}
+\end{equation}
+and
+\begin{equation}
+    \begin{split}
+        \widetilde{\T}^{\param}\V(s) &\geq R_{\min} + \gamma V_{\min} + (1-C)(V_{\min} - V_{\max})\\
+        &\geq R_{\min} + (\gamma-(1-D)) V_{\min}\\
+        &\geq V_{min}\\
+    \end{split}
+\end{equation}
+The next step is to show that $\T^{\param}$ is a contractive operator:
 \begin{equation}
 \begin{split}
-    &\max_{s}\expect_{\pol}[ \Delta^V(s) -  \Delta^U(s))] \\
-    &\leq \max_{s}\expect_{\pol}[(1-D)(V(s)-U(s))]\\
+    &\norm{\T^{\param}V - \T^{\param}U}_{\infty}\\
+    &\leq \max_{s,s'}\expect_{\pol}[\gamma V(s) + \Delta^V(s') - (\gamma U(s) + \Delta^U(s'))] \\
+    &\leq \max_{s,s'}\expect_{\pol}[\gamma (V(s)-U(s)) + (1-D)(V(s') -U(s'))]\\
+    &\leq \max_{s}\expect_{\pol}[((1-D)+\gamma)(V(s) - U(s))]\\
+    &\leq ((1-D)+\gamma) \norm{V - U}_{\infty}
 \end{split}
 \end{equation}
-where $\Delta^U$ is the $\Delta$ described in Eq. \ref{decompose} with value function $U$. For any $\gamma$ contraction operator we can now guarantee that $\T^{\param}$ is $\gamma + (1-D)$ contraction operator where $\gamma + (1-D) < 1$ holds from assumption \label{a_rew}. We provide an example in the appendix \ref{set_gamma} to decide a choice on $C$ based on $\gamma$ and $D$.
-We can guarantee that $\Vt$ converges to a fixed point of the operator $\T^{\param}$ with probability one using theorem 3 of \cite{tsitsiklis1994asynchronous}. The assumptions of theorem 3 of \cite{tsitsiklis1994asynchronous} are discussed in section \ref{assumption} of the appendix.
+and from the assumption we know that $(1-D)+\gamma < 1$.
+\end{proof}
+ We provide an example to decide a choice on $C$ based on $\gamma$ and $D$.
+ To select C based on $\gamma$ and $D$ it suffice to solve analytically for:
+\begin{equation}
+\begin{split}
+    &(1-C)(V_{\max} - V_{\min}) \leq (1-D)V_{\min} \\
+    &\equiv (1-C)\frac{R_{\max}}{1-(\gamma + (1-D)} \leq ((1-D)+(1-C)) \frac{R_{\min}}{1-(\gamma - (1-D)}\\
+    &\equiv \frac{(1-C)(1-(\gamma-(1-D)))}{(1-(\gamma + (1-D))((1-D)+(1-C)} R_{\max}\leq R_{\min} \\
+    &\equiv \frac{D(1-C)(1-(\gamma-(1-D)))}{(1-(\gamma + (1-D))((1-D)+(1-C)} R_{\min} \leq R_{\min}
+\end{split}
+\end{equation}
+which is satisfied only if:
+\begin{equation}
+\begin{split}
+    \frac{D(1-C)(1-(\gamma-(1-D)))}{(1-(\gamma + (1-D))((1-D)+(1-C)} &\leq 1
+\end{split}
+\end{equation}
+As an example for $D = 0.8$ and $\gamma = 0.5$ any $C\geq 0.33$ satisfies this inequality.
 
+We can guarantee that $\Vt$ converges to a fixed point of the operator $\T^{\param}$ with probability one using theorem 3 of \cite{tsitsiklis1994asynchronous}. 
+We now discuss the assumptions of theorem 3 in \cite{tsitsiklis1994asynchronous} 
+\paragraph{Assumption 1:} Allows for delayed update that can happen in distributed system for example. In this algorithm all $\V$'s are updated at each time step $t$ and is not an issue here.
+\paragraph{Assumption 2: } As described by \cite{tsitsiklis1994asynchronous} assumption 2 ``allows for the possibility of deciding whether to update a particular component $x_i$ at time $t$, based on the past history of the process.''. This assumption is defined to accommodate for $\epsilon$-greedy exploration in Q-learning. In this paper we only consider policy evaluation hence this assumptions holds.
+\paragraph{ Assumption 3:} The learning rate of each state $s \in \mathbb{S}$ must satisfy Robbins Monroe conditions such that there exists $C \in \mathbb{R}$:
+\begin{equation}
+    \begin{split}
+        \sum_{i=0}^{\infty} \alpha_t(s) 
+e_t(s) &= \infty \quad \text{w.p.1}\\
+        \sum_{i=0}^{\infty} (\alpha_t(s) e_t(s))^2 &\leq C      \end{split}
+\end{equation}
+This can be verified by assuming that each state gets visited infinitely often and an appropriate decaying learning rate based on $\#_s$ (state visitation count) is used (linear for example). 
+\paragraph{Assumption 5:} This assumption requires $\T$ to be a contraction operator. This has been proven in theorem 1 of this paper.
 Theorem \ref{contraction_theorem} in its current form is not general enough to provide convergence in all tabular settings. It is meant to provide a first way to prove convergence for recurrent learning and lead the way to more refined analysis. Such extensions are discussed later in the paper.
 
 % Function Approx Stuff. Commenting it out now.
@@ -185,13 +253,13 @@ Theorem \ref{contraction_theorem} in its current form is not general enough to p
 
 %EXPLAIN HERE JUMPY N-STEP RETURN USING THE EXAMPLE\\
 
-
-
 \subsection{State dependent $\param$}
 As mentioned earlier, state dependent $\param$ are responsible for the success of certain techniques. For instance, the success of LSTM \cite{hochreiter1997long} can be attributed to the gating(state dependent smoothing) mechanism.In this section we consider $\param_{\omega}$ where $\param_t$ is estimated with a set of parameters $\omega$. There is a natural way to estimate $\param$ in our formulation as given below.
-\begin{equation}
-    \text{min}_{\param} \expect_{\pol}\norm{V^{\pol}-\vrb}_{2}\label{classic_loss}
+
+\begin{equation}\label{classic_loss}
+    \text{min}_{\param} \expect_{\pol}\norm{V^{\pol}-\vr}_{2}
 \end{equation}
+
 In practice, this compares the estimate $\Vt(s_t)$ and $\vrb(s_{t-1})$ to $V^{\pol}$ and gives more weight to the one that is closer among the two. This differs from the greedy approach\cite{white2016greedy} to set $\lambda$ as we don't explicitly need to consider the variance of the return.
 As an example, we derive an analytic form of gradient of $\param_{\omega} = \sigma(\omega_{s_t})$ where $\omega_{s_t}$ is a scalar. Taking the derivative of Eq. \ref{classic_loss}, gives the following update rule:
 \begin{equation}
@@ -200,12 +268,45 @@ As an example, we derive an analytic form of gradient of $\param_{\omega} = \sig
     &(V^{\pol}(s_t) -\vr(s_t) )(\Vt(s_t) - \vr(s_{t-1}))).  \label{beta_ur}
 \end{split}
 \end{equation}
-A full derivation of Eq. \ref{beta_ur} and a table illustrating the behavior of $\param$ following the loss described, can be found in section \ref{beta_update_rule} of the appendix.
+A full derivation of Eq. \ref{beta_ur} is given below and a table illustrating the behavior of $\param$ following the loss described, can be found in section \ref{beta_update_rule} of the appendix.
 
+
+We wish to find $\param = \sigma(\omega)$ minimizing the loss : 
+
+\begin{align}
+    \min \ \ \frac{1}{2}(V^{\pol}(s_t) - \vrb(s_t))^2  \\
+\end{align}
+Taking the derivative of the R.H.S of 2 gives
+
+\begin{align}
+    \frac{d}{d\omega_{s_t}} \ \ &\bigg( \frac{1}{2}(V^{\pol}(s_t) - \vrb(s_t))^2  \bigg) =(V^{\pol}(s_t) - \vrb(s_t)) \big(\frac{d (V^{\pol}(s_t) - \vrb(s_t))}{d\omega_{s_t}} \big) 
+     \big) )  \ \ \ \text{by chain rule}
+\end{align}
+
+We know that $\frac{d}{d\omega} \sigma(\omega_{s_t})=\sigma(\omega_{s_t})(1 - \sigma(\omega_{s_t}))$ \newline
+and $\frac{d}{d\sigma(\omega_{s_t})} (V^{\pol}(s_t) - \vrb(s_t)) = \frac{d}{d\sigma(\omega_{s_t})} \bigg(\sigma(\omega_{s_t})\V(s_t) + \big(1 - \sigma(\omega_{s_t})\big)\vrb(s_{t-1}) - V^{\pol}(s_t)\bigg) = \V(s_t) - \vrb(s_{t-1})$ \newline \newline
+
+Therefore, 
+\begin{align}
+    &\frac{d}{d\omega} \ \ \bigg( \frac{1}{2}(V^{\pol}(s_t) - \vrb(s_t))^2 + \lambda \sigma(\omega_{s_t}) \bigg) =\\
+    &(V^{\pol}(s_t) - \vrb(s_t)) (\V(s_t) - \vrb(s_{t-1}))\bigg(\sigma(\omega_{s_t})(1 - \sigma(\omega_{s_t}))\bigg)
+     + \lambda \bigg(\sigma(\omega_{s_t})(1 - \sigma(\omega_{s_t}))\bigg)  = \\
+     &\bigg(\sigma(\omega_{s_t})(1 - \sigma(\omega_{s_t}))\bigg) \bigg((V^{\pol}(s_t) - \vrb(s_t))(\V(s_t) - \vrb(s_{t-1})) \bigg)
+\end{align}
+\begin{table}
+\begin{center}
+\begin{tabular}{ c|c c } 
+  & \small{$V^{\pol}(s_t)>\vr(s_t)$} & \small{$V^{\pol}(s_t)<\vr(s_t)$} \\ 
+   \hline
+ \small{$\V(s_t)>\vr(s_{t-1})$} & $\param \uparrow$ &  $\param \downarrow$ \\ 
+ \small{$\V(s_t)<\vr(s_{t-1})$} & $\param \downarrow$ & $\param \uparrow$  \\ 
+\end{tabular}
+\end{center}
+\end{table}
 One caveat to consider with this update rule concerns the magnitude of $V$. In practice, to avoid the saturation of the sigmoid unit, the loss needs to be in a similar range $\sim [0,1]$. This can be mitigated by scaling the loss or cutting the gradients above a certain magnitude as done in PPO. \cite{schulman2017proximal}.
 A second caveat is that the gradient with respect to $\omega$ could be expanded further to include previous time steps. This is ignored in the tabular setting to favor simplicity of the update. However, this gradient is considered in deep reinforcement learning setting due to the strength of automatic differentiation.
-
 We now give an example of how this error can behave. Consider a situation in which one of the two scenarios could happen. In the first scenario, we see a spike due to a noisy reward or an error in the function approximator or a noise in the state representation. In the second scenario, this spike arise due to a sparse reward from the environment. This is illustrated in the figure \ref{fig:noise}. In the first scenario, $\vr$ is a better estimate of the expected discounted return than a 1-step estimate. Therefore, the algorithm learns to lower $\param$ around the spike to smooth out the trajectory hence lowering the variance. However, in the second scenario, $\vr$ becomes biased and the algorithm learns to trust its current estimate, driving $\param$ to 1. This is a classic bias variance trade-off, where the state dependant $\param$ can help us lower the bias induced. There exists an interesting connection to explore between $\lambda$ and $\param$ as $\lambda$ return is a better target to learn $\param$. This relationship is explored further in the experimental section of the paper.
+
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.5]{fig/noise_sparse.pdf}
@@ -213,27 +314,22 @@ We now give an example of how this error can behave. Consider a situation in whi
     \label{fig:noise}
 \end{figure}
 
-
 \subsection{Adjusting for the reward}
 In practice many environments in reinforcement learning have either a constant negative reward or a constant positive reward at every time step. In order to account for those rewards we propose an alternative formulation where $\vr$ accounts for the reward that was just seen:
 \begin{equation}
 \label{value_reward}
-\begin{split}
-    \vr(s_t) &= \param_t \Vt(s_t) + (1 - \param_t) (\vr(s_{t-1}) - r_{t-1}) \\ 
-\end{split}
+    \vr(s_t) = \param_t \Vt(s_t) + (1 - \param_t) (\vr(s_{t-1}) - r_{t-1}) 
 \end{equation}
-The decision on the choice of formulation to use will depend on the environment considered. \comment{In the case where $\param$ is restricted to $\param = \{0,1\}$, the updates on a state $V(s_i)$ can be interpreted as an undiscounted N-step return:
+
+The decision on the choice of formulation to use will depend on the environment considered. In the case where $\param$ is restricted to $\param = \{0,1\}$, the updates on a state $V(s_i)$ can be interpreted as an undiscounted N-step return:
 \begin{equation}\label{undiscounted}
         \delta_t = V^{\pol}(s_t) + \sum_{p=i}^{t-1} r_p - \Vt(s_i).
-\end{equation}}
+\end{equation}
 From a theoretical perspective, convergence of this formulation can be considered by modifying the bound on $\Delta$ to accommodate the reward. This is left as a future work. 
+
 \section{Related work}
 Recurrent learning shares similarities with many algorithms in reinforcement learning. The most important similarity is with respect to $\lambda$ return \cite{sutton1998reinforcement,dayan1992convergence}. There is often a debate of explicit versus implicit modelling in reinforcement learning and supervised learning from a conceptual perspective. $\lambda$ return is a way to implicitly enforce temporal coherence through the trajectory. In this paper, we propose a method to \emph{explicitly} enforce the temporal coherence using recurrent learning. Furthermore, recurrent learning yields a natural way to estimate an emphasis function whereas setting $\lambda$ efficiently still remains an open problem. In practice both $\lambda$ return and recurrent learning may be needed to properly enforce temporal coherence. The capacity to ignore states also share some similar motivations to semi-Markov decision process \cite{puterman1990markov} and Temporal Value Transport \cite{TVT}. Temporal Value Transport attempts to exploit similar ideas that recurrent learning does. It does so in a different manner. In particular, Temporal Value Transport is based on a discrete attention mechanism using threshold values in contrast to our continuous $\param$ \emph{attention} mechanism. This yields very different algorithms and theory in practice. As mentioned earlier, there exists similarities with emphatic TD \cite{mahmood2015emphatic} in the sense that it emphasizes or de-emphasizes the update done to a state based on $\param$. One key difference with emphatic TD is that the interest is decayed across all the states using $\gamma$, whereas in this work it is based on the interest of the future states. Our formulation is driven by the success of \emph{forgetting} and \emph{ignoring} in supervised learning. Furthermore, learning the emphasis function is not explored in \cite{mahmood2015emphatic}. Our work also relates to Temporal Regularization \cite{thodoroff2018temporal} that smooth the target of temporal difference methods using previous values of the trajectory. Although sharing similar motivation, the algorithms proposed are different. In particular, learning \emph{smoothing} coefficient is not considered. Finally, \cite{xu2017natural} proposes a mechanism to adaptively learn to use previous estimates. In practice, this is done by considering an \emph{auxiliary loss} between the target and the previous estimate in contrast with the setup considered here. Furthermore, the theoretical properties(convergence) of their algorithm is not considered.
 
-
-\comment{\subsection{Continuous time Markov + jump + all robotics event detection RNN and jumpy model}
-\cite{feinberg2004continuous}
-\cite{hochreiter1997long}}
 
 \section{Experiments}
 \begin{figure}[h]
@@ -259,8 +355,8 @@ It is possible to decompose policy evaluation into two sub tasks. The first one 
 \end{figure*}
 The value function $\Vt$ is learned using TD(0) with the loss described in Eq. \ref{simple_loss}. For all states $s_i \in \mathbb{S}$ we average the bias and the variance of $\vr(s_i)$ over 500 episodes. We define the \emph{bias} as $\norm{\Vt(s_i) - \vr(s_i)}_{2}$. Intuitively, it is the distance between the estimate $\Vt(s_i)$(used as optimal values for this experiment) and the exponentially smoothed estimate $\vr(s_i)$. We experiment with a range of fixed $\param$'s. We observe a decrease in bias and an increase in the variance as the $\param$ increases. In other words, the value of each state is forced to be close to the values in the past when $\param$ is low. This results in smooth values along the trajectory but biased due to their reliance on the past. As $\param \to 1$ we tend to be close to classic TD setting. One important note, to accurately demonstrate the bias variance trade-off induced by using exponential smoothing, we use the same learning mechanism for both $\vr$ and $\Vt$, namely the loss in Eq. (\ref{simple_loss}). This choice is necessary to have a proper comparison; choosing different losses would induce different fixed points and make the comparison difficult.
 
-\comment{\subsubsection{Bias reduction by learning $\param$ and including reward}
-In this experiment TD outperforms both method but the aim is to showcase the learned beta}
+
+
 \subsection{Partially observable setting}
 \begin{figure}[h]
     \centering
@@ -272,35 +368,35 @@ Next, we explore the capacity of recurrent learning to solve a partially observa
 \subsection{Deep reinforcement learning}
 \begin{figure*}[h]
     \centering
-    \begin{minipage}[b]{0.17\linewidth}
+    \begin{minipage}[b]{0.18\linewidth}
     \centering
     \includegraphics[width=\textwidth,height=2.8cm]{fig/phase_0.png}
     Phase 1: high $\param$
     \label{fig:phase_0}
     \end{minipage}
     \hspace{0.02cm}
-    \begin{minipage}[b]{0.17\linewidth}
+    \begin{minipage}[b]{0.18\linewidth}
     \centering
     \includegraphics[width=\textwidth,height=2.8cm]{fig/phase_1.png}
     Phase 2: low $\param$
     \label{fig:phase_1}
     \end{minipage}
     \hspace{0.02cm}
-    \begin{minipage}[b]{0.17\linewidth}
+    \begin{minipage}[b]{0.18\linewidth}
     \centering
     \includegraphics[width=\textwidth,height=2.8cm]{fig/phase_2.png}
     Phase 3: high $\param$
     \label{fig:phase_2}
     \end{minipage}
     \hspace{0.02cm}
-    \begin{minipage}[b]{0.17\linewidth}
+    \begin{minipage}[b]{0.18\linewidth}
     \centering
     \includegraphics[width=\textwidth,height=2.8cm]{fig/phase_3.png}
      Phase 4: low $\param$
     \label{fig:phase_3}
     \end{minipage}
     \hspace{0.02cm}
-    \begin{minipage}[b]{0.17\linewidth}
+    \begin{minipage}[b]{0.18\linewidth}
     \centering
     \includegraphics[width=\textwidth,height=2.8cm]{fig/phase_4.png}
     Phase 1: high $\param$
@@ -309,6 +405,7 @@ Next, we explore the capacity of recurrent learning to solve a partially observa
     \caption{Visual illustration of the cyclical behavior of $\param$ on Hopper}
     \label{fig:visual_hopper}
 \end{figure*}
+
 
 \begin{figure}[!h]
     \centering
@@ -323,7 +420,6 @@ In this experiment, we modify the critic of Proximal Policy Optimization (PPO)~\
 \end{equation}
 where the target $\Vt^{\lambda}$ is the generalized advantage function \cite{schulman2015high}. Using an automatic differentiation library (Pytorch \cite{paszke2017automatic}) we differentiate Eq.\ref{ppo_loss} through the modified estimate to learn the $\theta$ and $\omega$. The hyperparameters of PPO are not modified. Due to the batch updates in PPO, obtaining the trajectory information to create the computational graph can be costly. As a result, we cut the backpropagation after $N$ timesteps in a similar manner to truncated backpropagation through time \cite{williams1995gradient}. The learning rate for the $\param$ network, L1 regularization coefficient of $\param$ and number of backpropagation steps were obtained using hyperparameter search and details can be found in the appendix \ref{deep_RL_appendix}. We used a truncated backprop of $N=5$ in our experiments as found no empirical improvements for $N=10$. However, we expect in some settings(e.g. long term credit assignment) backprop further can be advantageous. The motivation to regularize $\param$ to be sparse comes from bounded rationality. Our brain has limited capacity and only updating the value at key states is a desirable property. This parameter plays a similar role as the deliberation cost in option \cite{harb2018waiting}. The best performing set of parameters included a regularization parameter of $0.5$ supporting this hypothesis. The performance reported are averaged over 20 different random seeds. \footnote{The base code used to develop this algorithm can be found here \cite{pytorchrl}. The code for Recurrent PPO can be found in the supplementary material}.
 
- 
 \subsubsection{Performance}
 The algorithm was tested on seven different games of the Mujoco suite \cite{todorov2012mujoco}. As demonstrated in the figure \ref{fig:perf_mujoco}, we observe an increase in performance on four of the tasks (Swimmer, Hopper, Inverted Pendulum, Double Inverted Pendulum). The performances are averaged over 20 seeds and a confidence interval of $95\%$ is used. For the other three tasks (Half Cheetah, Walker, Mountain Car) the performances were found to be comparable. The performance graphs for all the games can be found in figure \ref{fig:full_mujoco} in the appendix. The mean beta values and variance for all the tasks can also be found in the appendix (figure \ref{fig:beta_mean},\ref{fig:beta_std}).
 One interesting finding in the figure \ref{fig:perf_mujoco} concerns inverted-pendulum in the context of generalization. Though the convergence is quick for PPO, severe performance drops (reward drop by more than $100$) can be observed. We found that recurrent learning stabilizes the learning and suffer significantly less drops during training. We notice that on an average PPO will suffer from 5.91 drops below 900 points over 500k steps. In contrast, recurrent learning will only drop 3.53 times. This represent a 40\% drop in \emph{catastrophic forgetting} underlying the potential robustness of recurrent learning.
@@ -331,7 +427,7 @@ One interesting finding in the figure \ref{fig:perf_mujoco} concerns inverted-pe
 \subsubsection{Qualitative interpretation of $\param$ }
 
 \emph{Hopper}: At the end of training, we qualitatively analyze $\param$ through the trajectory and observe the cyclical behavior shown in figure \ref{fig:cyle_hopper}, where different colors describe various stages of the cycle. One intuitive way to look at $\param$ is: \emph{if I were to give a different value to a state would that alter my policy significantly?} We observe an increase in $\param$ value when the agent has to take an important decision like jumping or landing. We see a decrease in $\param$ when the agent has trivial actions to perform. This pattern is illustrated in the figure \ref{fig:visual_hopper} and \ref{fig:cyle_hopper}. This behaviour is cyclic and repetitive and a video of the same can be found at the following link\footnote{\url{https://youtu.be/0bzEcrxNwRw}{}}. One surprising fact was that this behavior was obtained without any regularization on $\param$. Similar behavior can be observed with regularization although the mean and variance of $\param$ diminishes.\\
- \begin{figure}[]
+ \begin{figure}
      \centering
      \includegraphics[scale=0.45]{fig/mountain.pdf}
      \caption{Behavior of $\param$ and the value function on Mountain-Car}
@@ -341,16 +437,15 @@ One interesting finding in the figure \ref{fig:perf_mujoco} concerns inverted-pe
 
 
 \section{Discussions}
-\paragraph{$\param$ as an interest function:} One interesting result of this work is that the $\param$ network learns to ignore some state without any restrictions imposed on it. It does so in order to reduce the variance. Furthermore, this $\param$ can be interpreted as an \emph{interest} function. In reinforcement learning, having access to a function quantifying the \emph{interest} \cite{mahmood2015emphatic} of a state can be helpful. For example, one could decide to explore from those states, prioritize experience replay based on those states. Further work can be done to study how $\param$ may impact performance. We also believe $\param$ can be related to the concepts of bottleneck state \cite{tishby2011information}. Finally, the concept of interest state in recurrent learning aligns well with the notion of interest state for the $\lambda$ return. Indeed bootstrapping on states with similar values than the one estimated will only result in variance. The most informative updates comes from bootstrapping on state with different value. 
+\subsection{$\param$ as an interest function:} One interesting result of this work is that the $\param$ network learns to ignore some state without any restrictions imposed on it. It does so in order to reduce the variance. Furthermore, this $\param$ can be interpreted as an \emph{interest} function. In reinforcement learning, having access to a function quantifying the \emph{interest} \cite{mahmood2015emphatic} of a state can be helpful. For example, one could decide to explore from those states, prioritize experience replay based on those states. Further work can be done to study how $\param$ may impact performance. We also believe $\param$ can be related to the concepts of bottleneck state \cite{tishby2011information}. Finally, the concept of interest state in recurrent learning aligns well with the notion of interest state for the $\lambda$ return. Indeed bootstrapping on states with similar values than the one estimated will only result in variance. The most informative updates comes from bootstrapping on state with different value. 
 
-\paragraph{Partial observability:} As demonstrated in the experiments earlier, recurrent learning is able in some cases to correctly estimate the value of aliased state using trajectory's estimate. This is a promising area to research as the experiments suggest that ignoring an uninformative state can sometimes be enough to learn its value function. This is in contrast to traditional POMDP method that attempts to infer the belief state. Inferring the true underlying state is not always feasible. In some cases learning to ignore aliased state and relying on previous estimates may be an easier task.
-\comment{\paragraph{Relationship between $\lambda$ and $\param$:} There exists an important relationship between $\lambda$ and $\param$. $\param$ can choose to ignore a state if the past is different from the future. We could get a better estimate of the future using $\lambda$ returns when compared against one step methods. Hence, a need for long horizon to learn accurate $\param$. This behaviour can also be seen in our \emph{mountain car} experiment. Also, bootstrapping from states that are ignored would be detrimental to the learning process. A state is never updated if it has $\param=0$ hence bootstrapping from this state will induce \emph{wrong} bias. To avoid this issue, one approach could be to use learned $\param$ as a state dependent $\lambda$ hence making correct updates.}
-\paragraph{Asymptotic convergence:} As mentioned previously assumption 2 is too restrictive to guarantee convergence in all tabular settings. This analysis could be refined by considering the trajectory's information to bound $\Delta$. As an example, one could consider any physical system where transition in the state space are smooth (continuous state space) and bounded by some Lipschitz constant in a similar manner than \cite{shah2018q}. 
-\paragraph{Bias of the eligibility trace:}
+\subsection{Partial observability:} As demonstrated in the experiments earlier, recurrent learning is able in some cases to correctly estimate the value of aliased state using trajectory's estimate. This is a promising area to research as the experiments suggest that ignoring an uninformative state can sometimes be enough to learn its value function. This is in contrast to traditional POMDP method that attempts to infer the belief state. Inferring the true underlying state is not always feasible. In some cases learning to ignore aliased state and relying on previous estimates may be an easier task.
+\subsection{Relationship between $\lambda$ and $\param$:} There exists an important relationship between $\lambda$ and $\param$. $\param$ can choose to ignore a state if the past is different from the future. We could get a better estimate of the future using $\lambda$ returns when compared against one step methods. Hence, a need for long horizon to learn accurate $\param$. This behaviour can also be seen in our \emph{mountain car} experiment. Also, bootstrapping from states that are ignored would be detrimental to the learning process. A state is never updated if it has $\param=0$ hence bootstrapping from this state will induce \emph{wrong} bias. To avoid this issue, one approach could be to use learned $\param$ as a state dependent $\lambda$ hence making correct updates.
+\subsection{Asymptotic convergence:} As mentioned previously assumption 2 is too restrictive to guarantee convergence in all tabular settings. This analysis could be refined by considering the trajectory's information to bound $\Delta$. As an example, one could consider any physical system where transition in the state space are smooth (continuous state space) and bounded by some Lipschitz constant in a similar manner than \cite{shah2018q}. 
+\subsection{Bias of the eligibility trace:}
 We showed in Eq. \eqref{trace} a technique to compute the gradient of the estimate recursively. This technique is computationally inexpensive compared to the recursive backpropogation as the gradient from the past is accumulated. But this kind of an update is biased. This bias comes from the fact that the true gradient obtained by applying the chain rule at future step is different than the trace if the parameters are updated at each time step. This is a similar problem encountered by eligibility traces \cite{seijen2014true} and real time recurrent learning \cite{williams1995gradient}. Similar idea than \cite{seijen2014true} may be used to obtain an unbiased estimate.
-\paragraph{Recurrent learning for action:} We have not explored the concept of recurrent learning for actions (Q values and policy gradient). This is a promising area as constraining actions to be temporally coherent is a natural prior to induce on a function approximator. This technique could also be interesting in the context of exploration as this could yield a \emph{structured exploration}. Finally, this framework with learning $\param$ can be cast as a \emph{vanilla} version of options \cite{sutton1999between}. 
+\subsection{Recurrent learning for action:} We have not explored the concept of recurrent learning for actions (Q values and policy gradient). This is a promising area as constraining actions to be temporally coherent is a natural prior to induce on a function approximator. This technique could also be interesting in the context of exploration as this could yield a \emph{structured exploration}. Finally, this framework with learning $\param$ can be cast as a \emph{vanilla} version of options \cite{sutton1999between}. 
 
-%Another important similarity is with \cite{mahmood2015emphatic} in which ideas such as emphasizing the states and limited capacity of a network are explored. But in this work, the estimate in the update equation depends on the previous value functions which is not the case in \cite{mahmood2015emphatic}. Our formulation helps in accurate credit assignment when we set the $\param$ correctly. This aspect is not investigated in this work and can be explored further. Another aspect we found in our initial experimentation that can be explored further is generalization. We believe learning $\param$ would help in generalization of tasks in reinforcement learning.
 
 \paragraph{Conclusion:}This paper proposes a technique to address two important aspects of reinforcement learning algorithms namely - temporal coherence, and selective updating. First, we prove asymptotic convergence of the proposed method. Later, we provide a bias-variance argument to emphasize the importance of temporal coherence. Then, we demonstrate interesting properties that result while we emphasize and de-emphasize updates on states during learning. We provide experiments to corroborate the application of our method in a partially observable domain and for continuous control.
 
@@ -358,3 +453,4 @@ We showed in Eq. \eqref{trace} a technique to compute the gradient of the estima
 
 
 
+ 
