@@ -13,3 +13,9 @@ Graph smooth estimate like time series
     \item averaging of previous values
     \item Entropy term 
 \end{itemize}
+
+
+\section{Introduction}
+Reinforcement Learning is a mathematical framework designed to model sequential decision making. It is used to solve a wide range of control tasks ranging from video games \cite{vinyals2017starcraft,mnih2013playing,mnih2016asynchronous} to robotics \cite{kober2013reinforcement,abbeel2010autonomous}. It is also used in many real-life applications such as hydro control \cite{grinberg2014optimizing} and power grid management \cite{franccois2016deep}.
+
+Reinforcement learning algorithms often suffers from variance issues. In particular, we describe two issues that Recurrent Learning attempts to mitigate. The first one considers the \emph{variance of the value estimates through the trajectory}. Consider a hypothetical scenario in which a person is driving a car at a high speed. Its behavior needs to be temporally coherent. If the driver wants to change lane, there needs to be a continuous smooth decision making process. For the policy of the driver to be coherent, its value function needs to be temporally smooth. Most algorithms make a decision at every time step without necessarily \emph{explicitly} enforcing temporal coherence nor considering previous decisions. This can lead to erratic and temporally inconsistent behaviors, particularly in tabular and discrete settings. The second issue considers the limited capacity of the brain to process information and make decision. Bounded rationality argues that human brain has a limited capacity to learn and can't store all the information. In this work we argue that the capacity to ignore or emphasize chosen state is a key component for the success of decision making algorithms.  

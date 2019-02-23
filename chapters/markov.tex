@@ -14,7 +14,7 @@ Intuitively, this means that the probability of moving to the next states is bas
     \label{fig:random_walk}
 \end{figure}
 Discrete time Markov chains can also be represented in matrix form. The transition function can be represented as a $|\s| \times |\s|$ matrix P such that $P_{ij} = \p(X_{n+1}=j|X_n=i)$. Studying Markov chains from an algebraic perspective can sometimes simplify the analysis.  \\
-We now define some useful fundamental properties of Markov chains. \\
+We now define some useful fundamental properties of Markov chains.
 If every state is accessible from every other, the chain(or its transition matrix) is said to be irreducible. 
 \begin{definition}
 A chain is said to be irreducible if $\forall i,j \in \s$ there exists $n \in \mathbb{N}$ such that:
@@ -32,8 +32,6 @@ Let $T_i$ define the hitting time of state i such that:
 \end{equation}
 We define a transient state if $T_i$ is not finite. A state is called recurrent if it is not transient.
 \end{definition}
-
-
 \begin{definition}
 A chain is defined as ergodic if it is positive recurrent and aperiodic.
 \end{definition}
@@ -44,7 +42,7 @@ P is ergodic
 Most of the Reinforcement learning theory relies on this assumption. However, some works considers the case when the chain is not ergodic (\cite{leike2016nonparametric}).
 
 \section{Stationary distribution}
-It is often interesting to study the properties of Markov chains in the limit. Over the long run, we define the stationary distribution $\mu_i$ as the \emph{proportion of time} spend in each state $i \in \s$.
+It is often interesting to study the properties of Markov chains in the limit. We define the stationary distribution $\mu_i$ as the \emph{proportion of time} spend in each state $i \in \s$.
 \begin{definition}
 Assuming that P is ergodic, P has a unique stationary distribution $\mu$ that satisfies:
 \begin{equation}
@@ -75,28 +73,25 @@ If a chain satisfies detailed balance, it is called reversible.
 
 \section{Mixing Time}
 
-In Markov chains theory, one of the main challenge is to study the mixing time of the chain (\cite{levin2017markov}). The mixing time corresponds to the time needed for the chain to be \emph{close} to its stationary distribution $\mu$. More formally it can be defined as:
+In Markov chains theory, one of the main challenges is to study the mixing time of the chain (\cite{levin2017markov}). The mixing time corresponds to the time needed for the chain to be \emph{close} to its stationary distribution $\mu$. More formally it can be defined as:
 \begin{equation}
     t_{mix}(\epsilon) = \text{min} \{ t : d_t(P) < \epsilon \}
 \end{equation}
 where $d_t(P)$ can be defined as in (\ref{eq:d_markov}).\\
-When the chain is reversible, it is possible to estimate and bound the mixing time relatively efficiently (\cite{diaconis1991geometric,})
-
-Indeed, many chains do not satisfy this detailed balance property. In this one case it is possible to use a different, but related, chain called the reversal Markov chain to infer mixing time bounds (\cite{fill1991eigenvalue,chung2012chernoff}).
+When the chain is reversible, it is possible to estimate and bound the mixing time relatively efficiently (\cite{diaconis1991geometric,}). Indeed, many chains do not satisfy this detailed balance property. In this one case it is possible to use a different, but related, chain called the reversal Markov chain to infer mixing time bounds (\cite{fill1991eigenvalue,chung2012chernoff}).
 
 
 
 
 \section{Reversal Markov Chains}
-The reversal Markov chain $\widetilde{P}$ can be interpreted as the Markov chain $P$ with time running backwards. It is be a key concept used to define convergence and bias induced by temporal regularization later in this thesis. \\
+The reversal Markov chain $\widetilde{P}$ can be interpreted as the Markov chain $P$ with time running backwards. It is be a key concept used to define convergence and bias induced by temporal regularization later in this thesis. 
 \begin{definition}[Reversal Markov chain~\cite{kemeny1976finite}]
 Let $\widetilde{P}$ the reversal Markov chain of $P$ be defined as:
 \begin{equation}
     \widetilde{P_{ij}} = \frac{\mu_j P_{ji}}{\mu_i} \qquad \forall i,j \in \s.
 \end{equation}
 \end{definition}
-As an example, assuming a Markov chain P has a uniform stationary distribution, if a transition is highly irreversible like falling off a cliff ($P_{ij} \# P_{ji}$) the difference between the forward and the backward chain in that state will be high. \\
-We now introduce some properties of reversal Markov chains that will be used later in the thesis.
+As an example, assuming a Markov chain P has a uniform stationary distribution, if a transition is highly irreversible like falling off a cliff ($P_{ij} \# P_{ji}$) the difference between the forward and the backward chain in that state will be high. We now introduce some properties of reversal Markov chains that will be used later in the thesis.
 \begin{remark}
 If $P$ is irreducible with invariant distribution $\mu$, then $\widetilde{P}$ is also irreducible with invariant distribution $\mu$.
 \end{remark}

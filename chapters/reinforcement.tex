@@ -89,6 +89,8 @@ Algorithm \ref{alg:pol_eval} shows an example of a stochastic version of equatio
 \label{alg:pol_eval}
 \end{algorithm}
 It is also possible to study the stochastic version of this operator using techniques from dynamical system and ordinary differential equations (\cite{borkar2000ode}).
+
+
 \subsection{Temporal Difference}
 At each step of the bellman operator the previous estimate $v^{\pol}_t$ at time step t is forgotten.
 \begin{equation}
@@ -163,15 +165,35 @@ Lambda-return can be implemented efficiently in an online fashion using eligibil
 \end{algorithm}
 However, this algorithm is biased if the trace is used online. This is due to the fact that when an update is done, the trace becomes biased as the distribution with respect to the new parameters would have been different. True online TD (\cite{seijen2014true}) solves this issue by accounting for those changes. This problem is similar to the one encountered by real time recurrent learning (\cite{williams1995gradient}). It would be interesting to study if True Online TD can be extended to the non-linear settings. 
 \subsection{Linear Function Approximation}
-The methods developed previously scale linearly with the number of states. This becomes quickly intractable for large discrete state space and continuous settings. One way to remedy this is to use function approximation. It is possible to develop similar operators using function approximator $v^{\pol}_{\theta}(s)$ which can be written in the linear case as :
-\begin{equation}
-    v^{\pol}_{\theta}(s) = \phi \theta
+The methods developed previously scale linearly with the number of states. This becomes quickly intractable for large discrete state space and continuous settings. One way to remedy this is to use function approximation. It is possible to develop similar operators using function approximator.
+The aim is to find a function $V_\theta: \mathbb{S} \rightarrow \mathbb{R}$ parametrized by $\theta$ that approximates $V^{\pol}$. We can fall back to the tabular setting by representing the states in a one hot vector form with $\theta \in \mathbb{R^{|\mathbb{S}|}}$. The goal is to find a set of parameters $\theta$ that minimizes the squared loss:
+\begin{equation}\label{simple_loss}
+    \mathcal{L}(\theta) = \expect_{\pol} [(V^{\pol} - V_\theta)^2]
 \end{equation}
-where $\phi$ is a vector representing the features of state s. In practice, $\theta$ is learned by minimizing the following objective:
+which yields the following update by taking the derivative with respect to $\theta$:
 \begin{equation}
-    \expect_{\pol}{(v^{\pol}(s)-v^{\pol}_{\theta}(s))^2}
+    \theta_{t+1} = \theta_t + \alpha (V^{\pol}(s_t) - V_{\theta_t}(s_t)) \nabla_{\theta_t} \Vt(s_t)
 \end{equation}
-where $v^{\pol}(s)$ is the \emph{target}. The target can be any estimate proposed earlier(Monte-carlo or Boostrap).
+where $\alpha$ is a learning rate.\\
+In practice $V^{\pol}$ is approximated using Monte Carlo rollouts (\cite{suttonreinforcement}) or TD methods (\cite{sutton1988learning}).
+
+\subsection{Convergence using Stochastic Approximation}
+Convergence in the stochastic setting is usually proven by casting the learning algorithm as a stochastic approximation (\cite{tsitsiklis1994asynchronous,borkar2009stochastic,borkar2000ode}) of the form:
+\begin{equation}\label{stoch}
+    \theta_{t+1} = \theta_t + \alpha( \T \theta_t  - \theta_t + w(t)) 
+\end{equation}
+where $\T: \mathbb{R^{|\mathbb{S}|}} \rightarrow \mathbb{R^{|\mathbb{S}|}}$ is a contraction operator and $w(t)$ is a noise term. 
+As an example, TD(0) is known to converge to the fixed point of the bellman operator (\cite{sutton1988learning}):
+\begin{equation}
+\begin{split}
+    \T \Vt(s_t) &= \expect_{s_{t+1} \sim \pol} [r(s_t) + \gamma \Vt(s_{t+1})]\\
+\end{split}
+\end{equation}
+However, in practice we have access to a noisy version of the operator $\widetilde{\T}$ due to sampling process hence the noise term $w(t)$:
+\begin{equation}
+    w(t) = r_t + \gamma \Vt (s_{t+1}) - \expect_{s_{t+1} \sim \pol} [r + \gamma \Vt(s_{t+1})]
+\end{equation}
+
 \section{Control}
 In the previous section we discussed estimating the value of a policy. However, in many cases, the actual goal is to use this estimate to \emph{improve} on the policy. This is called control.
 \subsection{Bellman Optimilatiy Equations}
@@ -271,3 +293,45 @@ Proximal methods (\cite{schulman2017proximal,schulman2015trust}) alleviate this 
     \beta \text{KL}(\pi_{\text{old}},\pol_{\text{new}})
 \end{equation}
 where $\param$ control the magnitude of the regularization. This regularization has been found to be effective when combined with deep neural network as function approximator.
+
+
+
+Regularization in Machine Learning is a cornerstone. Most models can be seen as bias/variance trade-off.
+\section{Regularization}
+Regularization in RL has been considered in several different perspectives. In this section we discuss the most popular one. Other works focus on regularizing the changes in policy directly. Those approaches are often based on entropy methods (\cite{neu2017unified,schulman2017proximal,bartlett2009regal}).
+Explicit regularization in the temporal space has received much less attention.
+% Though it has been shown that exploiting \emph{temporal coherence} can benefit to tracking algorithms and thus help in meta-learning~\cite{sutton2007role}, this remains far from the setting considered in this work.
+Temporal regularization in some sense may be seen as a ``backward'' multi-step method (\cite{sutton1998reinforcement}). 
+\subsection{Spatial Regularization}
+ One line of investigation focuses on regularizing the features learned on the state space (\cite{massoud2009regularized,petrik2010feature,pazis2011non,farahmand2011regularization,liu2012regularized,harrigan2016deep}). These approaches assume that nearby states in the state space have similar value.
+
+
+\subsubsection{Regularization of the function approximation}
+\cite{farahmand2011regularization}
+This thesis studies the reinforcement learning and planning problems that are modeled by a discounted Markov Decision Process (MDP) with a large state space and finite action space. We follow the value-based approach in which a function approximator is used to estimate the optimal value function. The choice of function approximator, however, is nontrivial, as it depends on both the number of data samples and the MDP itself. The goal of this work is to introduce flexible and statistically-efficient algorithms that find close to optimal policies for these problems without much prior information about them. The recurring theme of this thesis is the application of the regularization technique to design value function estimators that choose their estimates from rich function spaces. We introduce regularization-based Approximate Value/Policy Iteration algorithms, analyze their statistical properties, and provide upper bounds on the performance loss of the resulted policy compared to the optimal one. The error bounds show the dependence of the performance loss on the number of samples, the capacity of the function space to which the estimated value function belongs, and some intrinsic properties of the MDP itself. Remarkably, the dependence on the number of samples in the task of policy evaluation is minimax optimal. We also address the problem of automatic parameter-tuning of reinforcement learning/planning algorithms and introduce a complexity regularization-based model selection algorithm. We prove that the algorithm enjoys an oracle-like property and it may be used to achieve adaptivity: the performance is almost as good as the performance of the unknown best parameters. Our two other contributions are used to analyze the aforementioned algorithms. First, we analyze the rate of convergence of the estimation error in regularized least-squares regression when the data is exponentially beta-mixing. We prove that up to a logarithmic factor, the convergence rate is the same as the optimal minimax rate available for the i.i.d. case. Second, we attend to the question of how the errors at each iteration of the approximate policy/value iteration influence the quality of the resulting policy. We provide results that highlight some new aspects of these algorithms.
+
+\subsection{Policy Regularization}
+There exists several ways to regularize policy gradient method. The most comonly used in recent research is called entropy regularization \cite{neu2017unified,schulman2017proximal,bartlett2009regal}.
+\subsubsection{Entropy Regularization}
+In policy gradient method, one successful approach consists of regularizing the entropy of your policy distribution \cite{neu2017unified}. Policy gradient methods will tend to converge to distributions with low entropy. By adding an entropy bonus, it encourages the policy to explore and often yields much better performance.
+\begin{equation}
+\begin{split}
+    \pol &= \expect_{\pol}{r} + R(\pol)\\
+    R(\pol) = \text{entrop}
+\end{split}
+\end{equation}
+This sets of work \cite{schulman2017proximal,schulman2015trust} considers limiting the update of the policy gradient at each step to guarantee \emph{coherent} behavior. 
+
+
+\subsection{Temporal Regularization}
+Though no work explicitely considers the bias and variance induced of considering the past estimates, several work attempts to exploit this relationship to better performance.
+\subsubsection{Natural value approximator}
+The closest work to ours is possibly \cite{xu2017natural}, where they define natural value approximator by projecting the previous states estimates by adjusting for the reward and $\gamma$. Their formulation, while sharing similarity in motivation, yields different theory and algorithm in practice.
+\subsubsection{Backward bootstrapping}
+Backward bootstrapping method's can be seen as regularizing in feature space based on temporal proximity \cite{sutton2009fast,li2008worst,baird1995residual}
+\subsection{Deliberation cost}
+There exists between temporal regularization and option. Indeed having a high deliberation cost \cite{harb2017waiting} means that you smooth out your problem by having longer action. This can be seen as a bias variance trade off. 
+\subsubsection{Temporal coherence}
+Though it has been shown that exploiting \emph{temporal coherence} can benefit to tracking algorithms and thus help in meta-learning~\cite{sutton2007role}, this remains far from the setting considered in this work.
+
+

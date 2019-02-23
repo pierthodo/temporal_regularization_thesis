@@ -49,6 +49,7 @@ citecolor = [HTML]{0000FF},
 \newtheorem{theorem}{Theorem}
 \newtheorem{assumption}{Assumption}
 \newtheorem{definition}{Definition}
+\newtheorem{proposition}{proposition}
 \newtheorem{lemma}{Lemma}
 \newtheorem{corollaries}{Corollary}
 \newtheorem{property}{Property}
@@ -152,7 +153,7 @@ TODO
 \clearpage
 \renewcommand{\abstractname}{Abstract}
 \begin{abstract}
-Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  This paper explores a class of methods for temporal regularization. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics of temporal regularization via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games.
+Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  In this thesis, we explore two methods to regularize value function estimates temporally. We first propose to exponentially smooth the target of TD methods using previous value estimates. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games. The second method introduce    Recurrent Learning named from it's inspiration from Recurrent Neural Network. In this method, the value estimate of a state is exponentially smoothed with previous estimates along the trajectory.  We establish its asymptotic convergence properties under some smoothness assumption on the reward.  The proposed algorithm yields a natural way to learn a state dependent emphasis function that selectively learns to emphasize or ignore states based on trajectory information. We demonstrate the potential for this selective updating on a partially observable domain and several continuous control tasks.
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -161,7 +162,7 @@ Several applications of Reinforcement Learning suffer from instability due to hi
 \clearpage
 \renewcommand{\abstractname}{Résumé}
 \begin{abstract}
-Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  This paper explores a class of methods for temporal regularization. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics of temporal regularization via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games.
+Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  In this thesis, we explore two methods to regularize value function estimates temporally. We first propose to exponentially smooth the target of TD methods using previous value estimates. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games. The second method introduce    Recurrent Learning named from it's inspiration from Recurrent Neural Network. In this method, the value estimate of a state is exponentially smoothed with previous estimates along the trajectory.  We establish its asymptotic convergence properties under some smoothness assumption on the reward.  The proposed algorithm yields a natural way to learn a state dependent emphasis function that selectively learns to emphasize or ignore states based on trajectory information. We demonstrate the potential for this selective updating on a partially observable domain and several continuous control tasks.
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,9 +194,6 @@ Several applications of Reinforcement Learning suffer from instability due to hi
 \label{chap:reinforcement}
 \input{chapters/reinforcement}
 
-\chapter{Regularization in Markov Decision Process}
-\label{chap:regularization}
-\input{chapters/regularization}
 
 \chapter{Temporal Regularization}
 \label{chap:temporal}
