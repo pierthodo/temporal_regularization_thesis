@@ -12,14 +12,6 @@ Exponential smoothing (\cite{gardner1985exponential}) is one of the most widely 
 where $s_t$ is a signal, $x_t$ the averaged signal at time step $t$ and $\param$ a smoothing factor.
 In time series data it is used to approximate the mean of a stream of data. This kind of smoothing has various names (\cite{polyak1992acceleration,kingma2014adam}) depending on the field it is used in.  Most quantities in reinforcement learning (Q values, state values, actions, etc) are estimated as point estimate ignoring previous estimates from the trajectory. We propose to use exponential smoothing in reinforcement learning on the trajectory. In other words, we propose to smooth the estimate of a state $s_t$ using the estimates of states $s_i$ that occur earlier in the trajectory ($i\geq t$). Intuitively, states that are temporally close to each other should have similar value.\\
 However, exponential averaging can be biased if a sharp change(non-stationarity) is encountered in the trajectory, like falling off a cliff. To alleviate this issue a common technique used is to set $\param_t$ the exponential smoothing factor as a state or time dependent. In Recurrent Neural Networks, it is possible to view LSTM (\cite{hochreiter1997long}) and GRU (\cite{chung2014empirical}) as several non linear exponential smoothing functions. The key ingredient is the gating mechanism(state dependent $\param_t$) used to update the hidden cell. The capacity to ignore information allows the cell to focus only on important information. This can also be found in semi-iterative method used to solve linear system of equations. (\cite{golub1961chebyshev}) finds the optimal $\param_t$ using Chebyshev polynomials. In this work we explore a new method that attempts to learn a state dependent smoothing factor $\param$. We show how it relates to existing methods and exploits similar properties such as emphatic TD (\cite{sutton2016emphatic,mahmood2015emphatic}). 
-The contributions of the paper are as follows:
-\begin{itemize}
-    \setlength\itemsep{0.1em}
-    \item Propose a new way to estimate value function in reinforcement learning by exploiting the estimates along the trajectory.
-    \item Provide asymptotic convergence guarantee in the tabular setting under some smoothness assumption.
-    \item Derive a learning rule for a state dependent $\param$.
-    \item Perform a set of experiments in tabular and continuous settings to evaluate its strengths and weaknesses.
-\end{itemize}
 
 
 
@@ -27,7 +19,7 @@ The contributions of the paper are as follows:
 
 \section{Recurrent Learning in Reinforcement Learning}
 \label{RLRL}
-In this work, we propose to estimate the value function using the estimates along the trajectory. The value of a state $s$ at time step $t$ is given by:
+We propose to estimate the value function using the estimates along the trajectory. The value of a state $s$ at time step $t$ is given by:
 \begin{equation}
 \label{value}
 \begin{split}
@@ -67,7 +59,7 @@ We present Recurrent Temporal Difference(RTD) in Algorithm \ref{RTD}.
     \FORALL{t}
         \STATE Choose $a \sim \pi(s_t)$
         \STATE Take action $a$, observe $r(s_t),s_{t+1}$
-        \STATE $\vr(s_t) = \param_t \Vt(s_t) + (1-\param_t) (\vr (s_{t-1})$
+        \STATE $\vr(s_t) = \param_t \Vt(s_t) + (1-\param_t) (\vr (s_{t-1}))$
         \STATE $e_t = \param_t \nabla_{\theta} \Vt(s_t) + (1-\param_t) e_{t-1}$
         \STATE $\delta_t = r(s_t) + \gamma \Vt(s_{t+1}) - \vr(s_t)$
         \STATE $\theta = \theta + \alpha \delta_t e_t $
@@ -426,10 +418,8 @@ One interesting finding in the figure \ref{fig:perf_mujoco} concerns inverted-pe
 \subsection{Asymptotic convergence:} As mentioned previously assumption 2 is too restrictive to guarantee convergence in all tabular settings. This analysis could be refined by considering the trajectory's information to bound $\Delta$. As an example, one could consider any physical system where transition in the state space are smooth (continuous state space) and bounded by some Lipschitz constant in a similar manner than (\cite{shah2018q}). 
 \subsection{Bias of the eligibility trace:}
 We showed in Eq. \eqref{trace} a technique to compute the gradient of the estimate recursively. This technique is computationally inexpensive compared to the recursive backpropogation as the gradient from the past is accumulated. But this kind of an update is biased. This bias comes from the fact that the true gradient obtained by applying the chain rule at future step is different than the trace if the parameters are updated at each time step. This is a similar problem encountered by eligibility traces (\cite{seijen2014true}) and real time recurrent learning (\cite{williams1995gradient}). Similar idea than (\cite{seijen2014true}) may be used to obtain an unbiased estimate.
-\subsection{Recurrent learning for action:} We have not explored the concept of recurrent learning for actions (Q values and policy gradient). This is a promising area as constraining actions to be temporally coherent is a natural prior to induce on a function approximator. This technique could also be interesting in the context of exploration as this could yield a \emph{structured exploration}. Finally, this framework with learning $\param$ can be cast as a \emph{vanilla} version of options (\cite{sutton1999between}). 
 
 
-\paragraph{Conclusion:}
 
 
 

@@ -1,0 +1,48 @@
+\documentclass[11pt]{report}
+
+\begin{document}
+TEST THIS IDEA IN SUPERVISED LEARNING SETTING WITH AND WITHOUT GRU OR LSTM AND EVEN VANILLA RNN. Can this be used for classification and regression ? 
+
+\section{Ideas recurrent learning}
+Ideas to develop:
+\begin{itemize}
+	\item Bias variance induced by exponential smoothing
+	\item Credit assignement
+	\item Emphasis function
+	\item Partial observability
+\end{itemize}
+\section{Bias variance induced by exponential smoothing}
+In the tabular setting 1 experiment to show the bias variance trade-off. Need to think if it is ever a problem in reality.
+\section{Credit assignement}
+Need to think about the relationship with eligibility traces can they be combined ? 
+Do we need to do credit assignement in the case of transfer ? Maybe transfer intra game ?
+Do the example like in RNN paper. Random symbol for a while with one important symbol deciding the end. Can we convert this in continuous setting with function approximation ? I think our algorithm is completely tuned down version of LSTM optimized for specific case in RL. Can be useful in some cases and more data efficient. Learning to ignore a state altogether can be easier than learning to not update any gate of the hidden state. Maybe both can be useful add it in supervised learning ? 
+\section{Emphasis function}
+Useful for a lot of things:
+\begin{itemize}
+	\item Exploration
+	\item Hardware limited, time discretization
+	\item Model based
+	\item Replay memory
+	\item Interpretation
+	\item Credit assignement
+\end{itemize}
+Maybe need to pick a couple and try them out ? Exploration and replay memory seem like the easiest to start.
+\section{Experiments idea}
+\begin{itemize}
+	\item Add the RNN comparison in the pomdp experiment
+\end{itemize}
+\section{Ideas from reviewer}
+\begin{itemize}
+	\item Compare with RNN especially in the pomdp setting
+	\item Extend theory by adding reward ? What if we restrict the set of beta, still have the problem of stochastic transition ? 
+\end{itemize}
+\section{Random thoughts}
+\begin{itemize}
+	\item Discretization of beta
+	\item Model based with discrete beta
+	\item Time discretization of continuous time process 
+	\item Extend those idea in supervised learning regression ??
+\end{itemize}
+
+\end{document}

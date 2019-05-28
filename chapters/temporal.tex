@@ -1,7 +1,6 @@
-\section{Theory}
 Regularization in the feature/state space, or \emph{spatial regularization} as we call it, exploits the regularities that exist in the observation (or state). In contrast, \emph{temporal regularization} considers the temporal structure of the value estimates through a trajectory. Practically this is done by smoothing the value estimate of a state using estimates of states that occurred earlier in the trajectory.
 In this section we first introduce the concept of temporal regularization and discuss its properties in the policy evaluation setting. We then show how this concept can be extended to exploit information from the entire trajectory by casting temporal regularization as a time series prediction problem. 
-\subsection{Value based temporal regularization}
+\section{Value based temporal regularization}
 Let us focus on the simplest case where the value estimate at the current state is regularized using only the value estimate at the previous state in the trajectory, yielding updates of the form: % COMMENT(pierre-luc) : this sentence could be clearer. 
 % Attempt: As a first step, we consider the case where the expected discounted return at a state also depends on the value at the previous step. 
 % COMMENT(pierre-luc): You also need some more motivation as to why this particular form, especially the time-reversal aspect. Otherwise, it seems to be taken totally out of the blue. Why time-reversal matrix and not just P ? 
@@ -181,6 +180,12 @@ We consider a synthetic MDP with 10 states where transition probabilities are sa
 Figure~\ref{fig:mixing} displays the error curve when varying the regularization parameter $\param$. We observe a U-shaped error curve, that intermediate values of $\param$ in this example yields faster mixing time.
 One explanation is that transition matrices with extreme probabilities (low or high) yield poorly conditioned transition matrices. Regularizing with the reversal Markov chain often leads to a better conditioned matrix at the cost of injecting bias.
 %COMMENT(pierre-luc) : poorly conditioned: you should compute the actual condition numbers to convince the reader that this is actually what is happening. 
+\begin{figure*}
+	\centering
+	\includegraphics[scale=0.7]{./fig/Markov_mixing.pdf}
+\caption{Distance between the stationary transition probabilities and the estimated transition probability for different values of regularization parameter $\param$.}
+\label{fig:mixing}
+\end{figure*}
 
 \subsection{Bias}
 \label{sec:expe:bias}
@@ -192,19 +197,14 @@ To this end, we consider a synthetic MDP with $10$ states where both transition 
 Figure~\ref{fig:mod} shows the difference between the regularized and un-regularized MDPs as $N$ changes, for different values of regularization parameter $\param$.
 We observe that increasing $N$, meaning more states get rewards close to one another, results into less bias. This is due to rewards putting emphasis on states where the original and reversal Markov chain are similar.
 
-\begin{figure}
-\begin{minipage}[c]{0.45\linewidth}
-\includegraphics[height=5cm,width=\linewidth]{./fig/Markov_mixing.pdf}
-\caption{Distance between the stationary transition probabilities and the estimated transition probability for different values of regularization parameter $\param$.}
-\label{fig:mixing}
-\end{minipage}
-\hfill
-\begin{minipage}[c]{0.45\linewidth}
-\includegraphics[height=5.2cm,width=\linewidth]{./fig/Bias_N.pdf}
+\begin{figure*}
+	\centering
+
+	\includegraphics[scale=0.7]{./fig/Bias_N.pdf}
 \caption{Mean difference between $\Vr^{\pi}$ and $\V^{\pi}$ given the regularization parameter $\param$, for different amount of smoothed states $N$.}
 \label{fig:mod}
-\end{minipage}
-\end{figure}
+\end{figure*}
+
 
 \subsection{Variance}
 \label{sec:expe:variance}
@@ -213,20 +213,22 @@ The primary motivation of this work is to reduce variance, therefore we now cons
 
 Figure~\ref{fig:perf_MDP} shows these errors at each iteration, averaged over $100$ runs. We observe that temporal regularization indeed reduces the variance and thus helps the learning process by making the value function easier to learn.
 
+\begin{figure*}
+	\centering
 
-\begin{figure}
-\begin{minipage}[c]{0.45\linewidth}
-\includegraphics[width=\linewidth]{./fig/Exp_2.png}
+	\includegraphics[scale=0.7]{./fig/Exp_2.png}
 \caption{Synthetic MDP where state $S_1$ has high variance.}
 \label{fig:MDP}
-\end{minipage}
-\hfill
-\begin{minipage}[c]{0.45\linewidth}
-\includegraphics[width=\linewidth]{./fig/Exp_2_result.png}
+\end{figure*}
+
+\begin{figure*}
+	\centering
+
+	\includegraphics[scale=0.7]{./fig/Exp_2_result.png}
 \caption{Left plot shows absolute difference between original ($\V^{\pi}(S_1)$) and regularized ($\Vr^{\pi}(S_1)$) state value estimates to the optimal value $\V^*(S_1)$. Right plot shows the variance of the estimates $\V$.}
 \label{fig:perf_MDP}
-\end{minipage}%
-\end{figure}
+\end{figure*}
+
 
 \subsection{Propagation of the information}
 We now illustrate with a simple experiment how temporal regularization allows the information to spread faster among the different states of the MDP. For this purpose, we consider a simple MDP, where an agent walks randomly in two rooms (18 states) using four actions (up, down, left, right), and a discount factor $\gamma=0.9$. The reward is $r_t=1$ everywhere and passing the door between rooms (shown in red on Figure~\ref{fig:room}) only happens 50\% of the time (on attempt). The episode starts at the top left and terminates when the agent reaches the bottom right corner. The sole goal is to learn the optimal value function by walking along this MDP (this is not a race toward the end).
@@ -303,7 +305,7 @@ The full performance for each game can be found in figure \ref{fig:my_label}.
 
 \section{Discussion}
 
-\paragraph{Noisy states:}
+\subsection{Noisy states:}
 
 Is is often assumed that the full state can be determined, while in practice, the Markov property rarely holds. This is the case, for example, when taking the four last frames to represent the state in Atari games~\cite{mnih2015human}. 
 
@@ -313,7 +315,7 @@ For example, the observed features may be similar for two states that are intrin
 % COMMENT(pierre-luc) : the paper "On the Role of Tracking in Stationary Environments" by Sutton, Koop, Silver (2009) is related to this idea of "temporal smoothing". They develop the idea that "tracking" can be useful under partial observability (extremenly improverished features). In fact, their "Black and white" world would have been a nice experiment to try in this paper.
 % COMMENT(pierre-luc) two other related ideas about "temporal smoothing. Options : I showed in the AAAI (2017) and in my thesis that Markov options + call return can be interpreted mathematically as a special mixture model where P(o' | s', o) = (1 - B(s',o))1_{o'=o} + B(s',o)mu(o'|s'). It's also a form of "temporal smoothing" where (1-B) determines how much you want to bias your distribution over options given by mu. The more you "continue" (B goes to 0), the more you "commit" and the more you "smooth". 
 % COMMENT(pierre-luc) : Another related idea is from Marc and his " Persistent Q-Learning" algorithm in "Increasing the Action Gap: New Operators for Reinforcement Learning". Very similar structure as Markov options (but MDP setting). 
-\paragraph{Choice of the regularization parameter:}
+\subsection{Choice of the regularization parameter:}
 
 The bias induced by the regularization parameter $\param$ can be detrimental for the learning in the long run. A first attempt to mitigate this bias is just to decay the regularization as learning advances, as it is done in the deep learning experiment (Sec.~\ref{sec:expe:drl}). Among different avenues that could be explored, an interesting one could be to aim for a state dependent regularization. For example, in the tabular case, one could consider $\param$ as a function of the number of visits to a particular state.
 % COMMENT(pierre-luc): could perhaps be cast as dual averaging. See Neu paper
@@ -323,13 +325,11 @@ The bias induced by the regularization parameter $\param$ can be detrimental for
 Previous work~\cite{smooth_value} looked at how the smoothness of the objective function relates to the convergence speed of RL algorithms.  An analogy can be drawn with convex optimization where the rate of convergence is dependent on the Lipschitz (smoothness) constant ~\cite{boyd2004convex}. 
 By smoothing the value temporally we argue that the optimal value function can be smoother. This would be beneficial in high-dimensional state space where the use of deep neural network is required. This could explain the performance displayed using temporal regularization on Atari games (Sec.~\ref{sec:expe:drl}).
 The notion of temporal regularization is also behind multi-step methods~\cite{sutton1998reinforcement}; it may be worthwhile to further explore how these methods are related.
+%TODO fix boyd citation 
 
-\subsection{Conclusion:}
+\subsection{Policy Gradient Temporal Regularization}
 
-This paper tackles the problem of regularization in RL from a new angle, that is from a temporal perspective. In contrast with typical spatial regularization, where one assumes that rewards are close for nearby states in the state space, temporal regularization rather assumes that rewards are close for states \emph{visited closely in time}. This approach allows information to propagate faster into states that are hard to reach, which could prove useful for exploration. The robustness of the proposed approach to noisy state representations and its interesting properties should motivate further work to explore novel ways of exploiting temporal information.
-\section{Policy Gradient Temporal Regularization}
-
-This idea is a continuation of the paper I wrote recently about what I call “Temporal Regularization”. The main intuition is to exploit previous estimate (v, q or pi’s) along the trajectory to reduce the variance of the current estimate. In particular in this project we are interested in policy gradient. We want to regularize the objective function by constraining the policy to be more "consistent" temporally 
+ The main intuition is to exploit previous estimate (v, q or pi’s) along the trajectory to reduce the variance of the current estimate. In particular in this project we are interested in policy gradient. We want to regularize the objective function by constraining the policy to be more "consistent" temporally 
 \begin{equation}
 \begin{split}
     R(\pi) = \beta ( \pi(a_{t-1}|s_{t-1}) - \pi(a_t|s_t)) \\

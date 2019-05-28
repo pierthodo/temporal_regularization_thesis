@@ -1,10 +1,19 @@
-There has been much progress in Reinforcement Learning (RL) techniques, with some impressive success with games \cite{silver16}, and several interesting applications on the horizon \cite{koedinger18,shortreed11,prasad17,dhingra17}. However RL methods are too often hampered by high variance, whether due to randomness in data collection, effects of initial conditions, complexity of learner function class, hyper-parameter configuration, or sparsity of the reward signal \cite{henderson2017deep}.
+% TODO write the intro
+
+Reinforcement Learning is a mathematical framework designed to model sequential decision making. It is used to solve a wide range of control tasks ranging from video games \cite{vinyals2017starcraft,mnih2013playing,mnih2016asynchronous} to robotics \cite{kober2013reinforcement,abbeel2010autonomous}. It is also used in many real-life applications such as hydro control \cite{grinberg2014optimizing} and power grid management \cite{franccois2016deep}.
+
+
+There has been much progress in Reinforcement Learning (RL) techniques, with some impressive success with games \cite{silver16}, and several interesting applications on the horizon \cite{koedinger18,shortreed11,prasad17,dhingra17}. In this thesis we focus on value based reinforcement learning. 
+INTRO VALUE BASED ..
+However RL methods are too often hampered by high variance, whether due to randomness in data collection, effects of initial conditions, complexity of learner function class, hyper-parameter configuration, or sparsity of the reward signal \cite{henderson2017deep}.
+We propose 2 method to mitigate those issue
 Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some (smaller) bias.  Regularization typically takes the form of smoothing over the observation space to reduce the complexity of the learner's hypothesis class.
 
 In the RL setting, we have an interesting opportunity to consider an alternative form of regularization, namely temporal regularization.  Effectively, temporal regularization considers smoothing over the trajectory, whereby the estimate of the value function at one state is assumed to be related to the value function at the state(s) that typically occur before it in trajectories. This structure arises naturally out of the fact that the value at each state is estimated using the Bellman equation. The standard Bellman equation clearly defines the dependency between value estimates. In temporal regularization we amplify this dependency by making each state depend more strongly on estimates of \emph{previous} states as opposed to multi-step that considers future states. 
 
 This paper proposes a class of temporally regularized value function estimates. We discuss properties of these estimates, based on notions from Markov chains, under the policy evaluation setting and extend the notion to the control case.
 Our experiments show that temporal regularization effectively reduces variance and estimation error in discrete and continuous MDPs.  The experiments also highlight that regularizing in the time domain rather than in the spatial domain allows more robustness to cases where state features are mis-specified or noisy, as is the case in the Atari domains.
+
 
 \section{Intro part 2}
 Graph smooth estimate like time series
@@ -16,6 +25,5 @@ Graph smooth estimate like time series
 
 
 \section{Introduction}
-Reinforcement Learning is a mathematical framework designed to model sequential decision making. It is used to solve a wide range of control tasks ranging from video games \cite{vinyals2017starcraft,mnih2013playing,mnih2016asynchronous} to robotics \cite{kober2013reinforcement,abbeel2010autonomous}. It is also used in many real-life applications such as hydro control \cite{grinberg2014optimizing} and power grid management \cite{franccois2016deep}.
 
 Reinforcement learning algorithms often suffers from variance issues. In particular, we describe two issues that Recurrent Learning attempts to mitigate. The first one considers the \emph{variance of the value estimates through the trajectory}. Consider a hypothetical scenario in which a person is driving a car at a high speed. Its behavior needs to be temporally coherent. If the driver wants to change lane, there needs to be a continuous smooth decision making process. For the policy of the driver to be coherent, its value function needs to be temporally smooth. Most algorithms make a decision at every time step without necessarily \emph{explicitly} enforcing temporal coherence nor considering previous decisions. This can lead to erratic and temporally inconsistent behaviors, particularly in tabular and discrete settings. The second issue considers the limited capacity of the brain to process information and make decision. Bounded rationality argues that human brain has a limited capacity to learn and can't store all the information. In this work we argue that the capacity to ignore or emphasize chosen state is a key component for the success of decision making algorithms.  
