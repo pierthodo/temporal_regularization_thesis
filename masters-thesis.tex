@@ -84,7 +84,7 @@ citecolor = [HTML]{0000FF},
 \newcommand{\Tvan}{\T^{\infty}_{\param}}
 \makeindex
 
-\usepackage[backend=biber, citestyle=authoryear, bibstyle=authoryear, isbn=false, url=false, doi=false, eprint=false, natbib=false, sorting=nty, uniquename=init]{biblatex}
+\usepackage[backend=biber, citestyle=authoryear, bibstyle=authoryear, isbn=false, url=false, doi=false, eprint=false, natbib=true, sorting=nty, uniquename=init]{biblatex}
 \addbibresource{library.bib}
 
 \begin{document}
@@ -153,7 +153,9 @@ TODO
 \clearpage
 \renewcommand{\abstractname}{Abstract}
 \begin{abstract}
-Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  In this thesis, we explore two methods to regularize value function estimates temporally. We first propose to exponentially smooth the target of TD methods using previous value estimates. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games. The second method introduce    Recurrent Learning named from it's inspiration from Recurrent Neural Network. In this method, the value estimate of a state is exponentially smoothed with previous estimates along the trajectory.  We establish its asymptotic convergence properties under some smoothness assumption on the reward.  The proposed algorithm yields a natural way to learn a state dependent emphasis function that selectively learns to emphasize or ignore states based on trajectory information. We demonstrate the potential for this selective updating on a partially observable domain and several continuous control tasks.
+Model-free Reinforcement Learning (RL) is a widely used framework for sequential decision making in many domains such as robotics and video games. However, its use in the real-world remains limited due, in part, to the high variance of value function estimates, leading to poor sample complexity. 
+
+The problem of disentangling signal from noise in sequential domains is not specific to Reinforcement Learning and has been extensively studied in the Supervised Learning literature. In this thesis we propose to view the value function through the trajectory as a Time-Series. We leverage the Time-Series literature to propose methods aimed at reducing the variance of value function estimates. 
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -162,7 +164,7 @@ Several applications of Reinforcement Learning suffer from instability due to hi
 \clearpage
 \renewcommand{\abstractname}{Résumé}
 \begin{abstract}
-Several applications of Reinforcement Learning suffer from instability due to high variance. This is especially prevalent in high dimensional domains. Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some bias. Most existing regularization techniques focus on spatial (perceptual) regularization.  Yet in reinforcement learning, due to the nature of the Bellman equation, there is an opportunity to also exploit temporal regularization based on smoothness in value estimates over trajectories.  In this thesis, we explore two methods to regularize value function estimates temporally. We first propose to exponentially smooth the target of TD methods using previous value estimates. We formally characterize the bias induced by this technique using Markov chain concepts. We illustrate the various characteristics via a sequence of simple discrete and continuous MDPs, and show that the technique provides improvement even in high-dimensional Atari games. The second method introduce    Recurrent Learning named from it's inspiration from Recurrent Neural Network. In this method, the value estimate of a state is exponentially smoothed with previous estimates along the trajectory.  We establish its asymptotic convergence properties under some smoothness assumption on the reward.  The proposed algorithm yields a natural way to learn a state dependent emphasis function that selectively learns to emphasize or ignore states based on trajectory information. We demonstrate the potential for this selective updating on a partially observable domain and several continuous control tasks.
+L'apprentissage par renforcement est un model d'apprentissage fréquemment utilise  pour modelise les problems de decisions sequentielles comme la robotique et les jeux videos. Cependent son utilisation dans le monde reele reste limite a cause de la forte variance des estimation de valeur, resultant 
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
