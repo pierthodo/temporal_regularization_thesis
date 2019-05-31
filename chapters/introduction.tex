@@ -1,29 +1,28 @@
+EXPAND A LOT HERE
+Since the inventions of computers, one of the ultimate goal for computer was to  display human level \emph{intelligence}. Starting the 1950's, many mathematical framework have been proposed [S Rule-based, logic ect...] to attempt to reproduce human intelligence. The two emerging thread at the time can be classified under two different paradigm: optimal control and trial and error. Optimal control attempts to find an \emph{optimal policy} for a dynamical system according to some \emph{optimality criterion}.  The field of optimal control was pioneered by Richard Bellman with the concepts of Dyanic programming and bellman equation. The bellman equation remains at the center of most Reinforcement algorithm nowadays. However many of the optimal control methods relied on the knowledge of the dynamics of the system. In contrast Trial and Error Took essence from animals and psychology..
+Gave rise to Temporal Difference methods.. The name is model free reinfrocement learning 
+
+Recently, both are often viewed are different perspecivte of the same field Reinforcement Learning
+In recent years, Reinforcement Learning has shown promises in many domains such as  such as robotics \cite{kober2013reinforcement,abbeel2010autonomous} and video games \cite{vinyals2017starcraft,mnih2013playing,mnih2016asynchronous}. It is also used in some real-life applications such as hydro control \cite{grinberg2014optimizing} and power grid management \cite{franccois2016deep}.
+
+
+ However, model-free RL use in the real-world remains limited due, in part, to the high variance of value function estimates \cite{greensmith2004variance}, leading to poor sample complexity \cite{glascher2010states,kakade2003sample}. This phenomenon is exacerbated by the noisy conditions of the real-world \cite{fox2015taming,pendrith1994reinforcement}. Real-world applications remain challenging as they often involve noisy data such as sensor noise and partially observable environments.whether due to randomness in data collection, effects of initial conditions, complexity of learner function class, hyper-parameter configuration, or sparsity of the reward signal \cite{henderson2017deep}.
+ 
+The problem of disentangling signal from noise in sequential domains is not specific to Reinforcement Learning and has been extensively studied in the Supervised Learning literature. In this work, we leverage ideas from time series literature by viewing the value function through the trajectory as a time series. MORE HERE 
+
+Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some (smaller) bias.  Regularization typically takes the form of smoothing over the observation space to reduce the complexity of the learner's hypothesis class. In the RL setting, we have an interesting opportunity to consider an alternative form of regularization, namely temporal regularization.  Effectively, temporal regularization considers smoothing over the trajectory, whereby the estimate of the value function at one state is assumed to be related to the value function at the state(s) that typically occur before it in trajectories. This structure arises naturally out of the fact that the value at each state is estimated using the Bellman equation. The standard Bellman equation clearly defines the dependency between value estimates. In temporal regularization we amplify this dependency by making each state depend more strongly on estimates of \emph{previous} states as opposed to multi-step that considers future states.  However 2 setting smoothing coefficient and decide when to smooth
+However, exponential smoothing along the trajectory can result in a bias when the value function changes dramatically through the trajectory (non-stationarity). This bias could be a problem if the environment encounters sharp changes, such as falling of a cliff, and the estimates are heavily smoothed.
+
+Instead of modifying the target we estimate the value functions directly using exponential smoothing We propose Recurrent Value Functions (RVFs): an exponential smoothing of the value function. The value function of the current state is defined as an exponential smoothing of the values of states visited along the trajectory where the value function of past states are summarized by the previous RVF. To alleviate the "falling of a cliff" issue, we propose to use exponential smoothing on value functions using a trainable state-dependent emphasis function which controls the smoothing coefficients. The emphasis function identifies important states in the environment. An important state can be defined as one where \emph{its value differs significantly from the previous values along the trajectory}. For example, when falling off a cliff, the value estimate changes dramatically, making states around the cliff more salient.
+
+In chapter 1 we explaon markov concept. In 2 RL concept in 3 we introduce the concept of temporal regularization. Then we..
+This paper proposes a class of temporally regularized value function estimates. We discuss properties of these estimates, based on notions from Markov chains, under the policy evaluation setting and extend the notion to the control case. Our experiments show that temporal regularization effectively reduces variance and estimation error in discrete and continuous MDPs.  The experiments also highlight that regularizing in the time domain rather than in the spatial domain allows more robustness to cases where state features are mis-specified or noisy, as is the case in the Atari domains.
+In chapter 4 we consider RVF
+To summarize the contributions of this work, we introduce RVFs to estimate the value function of a state by exponentially smoothing the value estimates along the trajectory. RVF formulation leads to a natural way of learning an emphasis function which mitigates the bias induced by smoothing. We provide an asymptotic convergence proof in tabular settings by leveraging the literature on asynchronous stochastic approximation \cite{tsitsiklis1994asynchronous}. Finally, we perform a set of experiments to demonstrate the robustness of RVFs with respect to noise in continuous control tasks and provide a qualitative analysis of the learned emphasis function which provides interpretable insights into the structure of the solution.
+
+
 % TODO write the intro
 
-Reinforcement Learning is a mathematical framework designed to model sequential decision making. It is used to solve a wide range of control tasks ranging from video games \cite{vinyals2017starcraft,mnih2013playing,mnih2016asynchronous} to robotics \cite{kober2013reinforcement,abbeel2010autonomous}. It is also used in many real-life applications such as hydro control \cite{grinberg2014optimizing} and power grid management \cite{franccois2016deep}.
+%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-There has been much progress in Reinforcement Learning (RL) techniques, with some impressive success with games \cite{silver16}, and several interesting applications on the horizon \cite{koedinger18,shortreed11,prasad17,dhingra17}. In this thesis we focus on value based reinforcement learning. 
-INTRO VALUE BASED ..
-However RL methods are too often hampered by high variance, whether due to randomness in data collection, effects of initial conditions, complexity of learner function class, hyper-parameter configuration, or sparsity of the reward signal \cite{henderson2017deep}.
-We propose 2 method to mitigate those issue
-Regularization is a commonly used technique in machine learning to reduce variance, at the cost of introducing some (smaller) bias.  Regularization typically takes the form of smoothing over the observation space to reduce the complexity of the learner's hypothesis class.
-
-In the RL setting, we have an interesting opportunity to consider an alternative form of regularization, namely temporal regularization.  Effectively, temporal regularization considers smoothing over the trajectory, whereby the estimate of the value function at one state is assumed to be related to the value function at the state(s) that typically occur before it in trajectories. This structure arises naturally out of the fact that the value at each state is estimated using the Bellman equation. The standard Bellman equation clearly defines the dependency between value estimates. In temporal regularization we amplify this dependency by making each state depend more strongly on estimates of \emph{previous} states as opposed to multi-step that considers future states. 
-
-This paper proposes a class of temporally regularized value function estimates. We discuss properties of these estimates, based on notions from Markov chains, under the policy evaluation setting and extend the notion to the control case.
-Our experiments show that temporal regularization effectively reduces variance and estimation error in discrete and continuous MDPs.  The experiments also highlight that regularizing in the time domain rather than in the spatial domain allows more robustness to cases where state features are mis-specified or noisy, as is the case in the Atari domains.
-
-
-\section{Intro part 2}
-Graph smooth estimate like time series
-\begin{itemize}
-    \item Fitting a model
-    \item averaging of previous values
-    \item Entropy term 
-\end{itemize}
-
-
-\section{Introduction}
-
-Reinforcement learning algorithms often suffers from variance issues. In particular, we describe two issues that Recurrent Learning attempts to mitigate. The first one considers the \emph{variance of the value estimates through the trajectory}. Consider a hypothetical scenario in which a person is driving a car at a high speed. Its behavior needs to be temporally coherent. If the driver wants to change lane, there needs to be a continuous smooth decision making process. For the policy of the driver to be coherent, its value function needs to be temporally smooth. Most algorithms make a decision at every time step without necessarily \emph{explicitly} enforcing temporal coherence nor considering previous decisions. This can lead to erratic and temporally inconsistent behaviors, particularly in tabular and discrete settings. The second issue considers the limited capacity of the brain to process information and make decision. Bounded rationality argues that human brain has a limited capacity to learn and can't store all the information. In this work we argue that the capacity to ignore or emphasize chosen state is a key component for the success of decision making algorithms.  

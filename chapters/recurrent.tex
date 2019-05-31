@@ -1,4 +1,8 @@
 
+\renewcommand{\V}{V_{\theta}}
+\renewcommand{\Vr}{\V_{\param}}
+
+
 In the previous chapter we regularized the value estimate by adding a regularization term to the objective(target). In this chapter we explore explicitly averaging the value estimate using exponential smoothing.
 
 
@@ -34,28 +38,7 @@ In contrast to traditional methods that attempt to minimize Eq. \ref{simple_loss
 \end{equation}
 where $\V$ is a function parametrized by $\theta$, and $\param_{\omega}$ is a function parametrized by $\omega$.
 This error is similar to the traditional error in Eq. \ref{simple_loss}, but we replace the value function with $\vr$. In practice, $V^{\pol}$ can be any target such as TD(0), TD(N), TD($\lambda$) or Monte Carlo \cite{sutton1998reinforcement} which is used in Reinforcement Learning.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% COMMENT STARTS HERE
-\begin{comment}
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale=0.5]{fig/noise_sparse.pdf}
-    \caption{Noise versus sparse reward}
-    \label{fig:noise}
-\end{figure}
-\end{comment}
-%This differs from the greedy approach\cite{white2016greedy} to set $\lambda$ as we don't explicitly need to consider the variance of the return.
-\begin{comment}
-As an example, we derive an analytic form of gradient of $\param_{\omega} = \sigma(\omega_{s_t})$ where $\omega_{s_t}$ is a scalar. Taking the derivative of Eq. \ref{classic_loss}, gives the following update rule:
-\begin{equation}
-    \omega_{s_t} = \omega_{s_t} + \alpha ( \sigma (\omega_{s_t})(1 -  \sigma(\omega_{s_t}) (V^{\pol}(s_t) -\vr(s_t) )(\V(s_t) - \vr(s_{t-1}))).  \label{beta_ur}
-\end{equation}
-A full derivation of Eq. \ref{beta_ur} and a table illustrating the behavior of $\param$ following the loss described, can be found in section \ref{beta_update_rule} of Appendix.
-One caveat to consider with this update rule concerns the magnitude of $V$. In practice, to avoid the saturation of the sigmoid unit, the loss needs to be in a similar range $\sim [0,1]$. This can be mitigated by scaling the loss or cutting the gradients above a certain magnitude as done in PPO. \cite{schulman2017proximal}.
-A second caveat is that the gradient with respect to $\omega$ could be expanded further to include previous time steps. This is ignored in the tabular setting to favor simplicity of the update. However, this gradient is considered in deep Reinforcement Learning setting due to the strength of automatic differentiation.
-\end{comment}
-% COMMENT ENDS HERE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 We minimize Eq. \ref{loss_beta} by updating $\theta$ and $\omega$ using the semi-gradient technique which results in the following update rule:
 \begin{equation}
 \begin{split}
@@ -67,22 +50,20 @@ where $\delta_t = V^{\pol}(s_t) - \vr(s_t)$ is the TD error with RVF in the plac
 
 \begin{algorithm}[H]
 \caption{Recurrent Temporal Difference(0)}
-\begin{spacing}{1.2}
 \begin{algorithmic}[1]
     \label{RTD}
-    \State Input: $\pi$,$\gamma$,$\theta$,$\omega$
-    \State Initialize: $\vr(s_0) = \V(s_0)$
-    \State Output: $\theta,\omega$ \Comment{Return the learned parameters}
-    \For{t}
-        \State Take action $a \sim \pi(s_t)$ , observe $r(s_t),s_{t+1}$
-        \State $\vr(s_t) = \param_{\omega}(s_t) \V(s_t) + (1-\param_{\omega}(s_t)) \vr (s_{t-1})$ \Comment{Compute the RVF}
-        \State $\delta_t = V^{\pol}(s_t) - \vr(s_t)$ \Comment{Compute TD error with respect to RVF}
-        \State $\theta = \theta + \alpha \delta_t \nabla_{\theta} \vr(s_t) $ \Comment{Update parameters of the value function $\theta$}
-        \State $\omega = \omega + \alpha \delta_t \nabla_{\omega} \vr(s_t)$ \Comment{Update parameters of the emphasis function $\omega$}
-    \EndFor
+    \STATE Input: $\pi$,$\gamma$,$\theta$,$\omega$
+    \STATE Initialize: $\vr(s_0) = \V(s_0)$
+    \STATE OUTPUT: $\theta,\omega$ 
+    \FOR{t}
+        \STATE Take action $a \sim \pi(s_t)$ , observe $r(s_t),s_{t+1}$
+        \STATE $\vr(s_t) = \param_{\omega}(s_t) \V(s_t) + (1-\param_{\omega}(s_t)) \vr (s_{t-1})$ 
+        \STATE $\delta_t = V^{\pol}(s_t) - \vr(s_t)$ 
+        \STATE $\theta = \theta + \alpha \delta_t \nabla_{\theta} \vr(s_t) $ 
+        \STATE $\omega = \omega + \alpha \delta_t \nabla_{\omega} \vr(s_t)$ 
+    \ENDFOR
 \end{algorithmic}
 \label{algo_rtd}
-\end{spacing}
 \end{algorithm}
 
 As discussed earlier, $\param_{\omega}$ learns to identify states whose value significantly differs from previous estimates. While optimizing for the loss function described in Eq. \ref{loss_beta}, the $\param_{\omega}(s_t)$ learns to bring the RVF $\vr$ closer to the target $V^{\pol}$. It does so by placing greater emphasis on whichever is closer to the target, either $\V(s_t)$ or $\vr(s_{t-1})$. Concisely, the updated behaviour can be split into four scenarios. A detailed description of these behaviours is provided in Table \ref{sample-table}. Intuitively, if the past is not aligned with the future, $\param$ will emphasize the present. Likewise, if the past is aligned with the future, then $\param$ will place less emphasis on the present. This behaviour is further explored in the experimental section.
@@ -201,18 +182,17 @@ First, we explore RVF robustness to partial observability on a synthetic domain.
 We consider the simple chain MDP described in Figure \ref{fig:toy MDP}. This MDP has three chains connected together to form a \emph{Y}. Each of the three chains (left of $S_1$, right of $S_2$, right of $S_3$) is made up of a sequence of states. The agent starts at $S_0$ and navigates through the chain. At the intersection $S_1$, there is a $0.5$ probability to go up or down. The chain on top receives a reward of $+1$ while the one at the bottom receives a reward of $-1$. Every other transition has a reward of $0$, unless specified otherwise.
 \begin{figure}[h]
 \centering
-\begin{subfigure}[b]{.45\textwidth}    \includegraphics[width=0.9\textwidth,height=3.5cm]{fig/toy_MDP.png}
+    \includegraphics[width=0.9\textwidth,height=3.5cm]{fig/toy_MDP.png}
     \caption{Simple chain MDP.}
     \label{fig:toy MDP}
-\end{subfigure}
-\begin{subfigure}[b]{.45\textwidth}
+\end{figure}
+\begin{figure}[b]
     \centering
     \includegraphics[width=0.95\textwidth,height=3.75cm]{fig/POMDP.pdf}
     \caption{Results on the aliased Y-chain.}
     \label{fig:pomdp}
-\end{subfigure}
-\caption{(a) Simple chain MDP: The agent starts at state $S_0$ and navigates along the chain. States $S_4$ and $S_5$ are aliased. (b) Results on the aliased Y-chain on various methods, such as TD$(0)$, TD($\lambda$), GRU, RTD($0$), and Optimal RTD($0$) (O-RTD(0)) averaged over 20 random seeds.}
 \end{figure}
+(a) Simple chain MDP: The agent starts at state $S_0$ and navigates along the chain. States $S_4$ and $S_5$ are aliased. (b) Results on the aliased Y-chain on various methods, such as TD$(0)$, TD($\lambda$), GRU, RTD($0$), and Optimal RTD($0$) (O-RTD(0)) averaged over 20 random seeds.
 We explore the capacity of recurrent learning to solve a partially observable task in the \emph{Y} chain. In particular, we consider the case where some states are aliased (share a common representation). The representation of the states $S_4$ and $S_5$ in Figure \ref{fig:toy MDP} are aliased. The goal of this environment is to correctly estimate the value of the aliased state $V^{\pol}(S_4)=0.9,V^{\pol}(S_5)=-0.9$ (due to the discount factor(0.9) and the length of each chain being 3). When TD methods such as TD($0$) or TD($\lambda$) are used, the values of the aliased states $S_4$ and $S_5$ are close to $0$ as the reward at the end of the chain is $+1$ and $-1$.  However, when learning $\param$ (emphasis function $\param$ is modelled using a sigmoid function), Recurrent Value Functions achieve almost no error in their estimate of the aliased states as illustrated in Figure \ref{fig:pomdp}. This can be explained by observing that $\param \rightarrow 0$ on the aliased state due to the fact that the previous values along the trajectory are better estimates of the future than those of the aliased state. As $\param \to 0$, $\vr(S_4)$ and $\vr(S_5)$ tend to rely on their more accurate previous estimates, $\vr(S_2)$ and $\vr(S_3)$. We see that learning to ignore certain states can at times be sufficient to solve an aliased task. We also compare with a recurrent version (O-RTD) where optimal values of $\param$ are used. In this setting,  $\param(S_1)=\param(S_2) = \param(s_3) = 1 $ and other states have $\param = 0$. Another interesting observation is with respect to Recurrent Neural Networks. RNNs are known to solve tasks which have partial observability by inferring the underlying state. LSTM and GRU have many parameters that are used to infer the hidden state. Correctly learning to keep the hidden state intact can be sample-inefficient. In comparison, $\param$ can estimate whether or not to put emphasis (confidence) on a state value using a single parameter. This is illustrated in Figure \ref{fig:pomdp} where RNNs take 10 times more episodes to learn the optimal value when compared to RVF. This illustrates a case where learning to ignore a state is easier than inferring its hidden representation. The results displayed in Figure \ref{fig:pomdp} are averaged over 20 random seeds. For every method, a hyperparameter search is done to obtain their optimal value. These can be found in Appendix \ref{hyper_toy}. We noticed that the emphasis function is easier to learn if the horizon of the target is longer, since a longer horizon provides a better prediction of the future. To account for this, we use $\lambda$-return as a target.
 \subsection{Deep Reinforcement Learning}
 Next, we test RVF on several environments of the Mujoco suite \cite{todorov2012mujoco}. We also evaluate the robustness of different algorithms by adding $\epsilon$ sensor noise (drawn from a normal distribution $\epsilon \sim N(0,1)$) to the observations as presented in \cite{zhang2018dissection}.
@@ -232,7 +212,6 @@ The algorithm was tested on several games of the Mujoco suite \cite{todorov2012m
 \emph{Hopper}: At the end of training, we can qualitatively analyze the emphasis function ($\param$) through the trajectory. We observe cyclical behaviour shown in Figure \ref{fig:cyle_hopper}, where different colours describe various stages of the cycle. The emphasis function learned to identify \emph{important states} and to ignore the others. One intuitive way to look at the emphasis function($\param$) is: \emph{If I were to give a different value to a state, would that alter my policy significantly?} We observe an increase in the value of the emphasis function ($\param$) when the agent must make an important decision, such as jumping or landing. We see a decrease in the value of the emphasis function ($\param$) when the agent must perform a trivial action. This pattern is illustrated in Figure \ref{fig:visual_hopper} and \ref{fig:cyle_hopper}. This behaviour is cyclic and repetitive, a video of which can be found in the following link\footnote{\url{https://youtu.be/0bzEcrxNwRw}{}}.
 \begin{figure}[h]
 \centering
-\begin{subfigure}{.45\textwidth}
     \centering
     \begin{minipage}[b]{0.4\linewidth}
     \centering
@@ -265,15 +244,14 @@ The algorithm was tested on several games of the Mujoco suite \cite{todorov2012m
     \hspace{0.02cm}
     \caption{Cyclical behaviour of $\param$ on Hopper.}
     \label{fig:visual_hopper}
-\end{subfigure}
-\begin{subfigure}{.45\textwidth}
+\end{figure}
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth,height=4.7cm]{fig/beta_hopper.pdf}
     \caption{Behaviour of $\param$ through the trajectory.}
     \label{fig:cyle_hopper}
-\end{subfigure}
-\caption{(a) The emphasis function learns to emphasize key states in the environment. The emphasis function is high when the agent is making important decisions, such as landing or taking off (Phase 1 and Phase 3). The emphasis function is low when the agent is making decisions while it is in the air (Phase 2 and Phase 4). (b) Behaviour of the emphasis function along the trajectory for various phases described in (a) for one period. The emphasis function keeps repeating the behaviour.}
 \end{figure}
+(a) The emphasis function learns to emphasize key states in the environment. The emphasis function is high when the agent is making important decisions, such as landing or taking off (Phase 1 and Phase 3). The emphasis function is low when the agent is making decisions while it is in the air (Phase 2 and Phase 4). (b) Behaviour of the emphasis function along the trajectory for various phases described in (a) for one period. The emphasis function keeps repeating the behaviour.
 \section{Discussions and Future Work}
 \paragraph{Temporal Credit assignment:} As mentioned earlier, we can control the flow of gradient by using emphasis function $\param_{\omega}(s_t)$ and pass gradient to the states that contributed to the reward but are located several time-steps earlier. We could potentially do credit assignment on states that are temporally far away by forcing the emphasis function between these states to be close to $0$. This setting could be useful in problems with long horizons, such as lifelong learning and continual learning.
 \begin{comment}

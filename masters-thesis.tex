@@ -42,8 +42,20 @@ citecolor = [HTML]{0000FF},
 \usetikzlibrary{shapes,arrows}
 \usepackage{standalone}
 \usepackage{amsmath,algorithmic,algorithm,setspace}
-
-
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{bbm}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{verbatim}
+\usepackage{wrapfig}
 % Custom commands
 
 \newtheorem{theorem}{Theorem}
@@ -56,7 +68,6 @@ citecolor = [HTML]{0000FF},
 \newtheorem*{remark}{Remark}
 \usetikzlibrary{shapes,arrows}
 \usepackage{standalone}
-\newcommand{\param}{\beta}
 \newcommand{\s}{\mathcal{S}}
 \newcommand{\p}{\mathcal{P}}
 \newcommand{\pol}{\pi}
@@ -68,20 +79,23 @@ citecolor = [HTML]{0000FF},
 \newcommand{\V}{V}
 \newcommand{\regT}{\T^{\pol}_{\param}}
 \newcommand{\regTo}{\T^{*}_{\param}}
-\newcommand{\expect}{\mathop{\mathbb{E}}}
-\newcommand{\RE}{r}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\dr}{\widetilde{\delta}}
 \newcommand{\qr}{\widetilde{Q}}
 \newcommand{\pit}{\widetilde{\pi}}
-\newcommand{\vr}{V^{\param}_{\theta}}
+\newcommand{\param}{\beta}
+\newcommand{\vr}{V^{\param}_{\theta, \omega}}
 \newcommand{\vrb}{V^{\param}_{\theta,\omega}}
-\newcommand{\Vt}{V_{\theta}}
 \newcommand{\Vb}{V_{\theta,\omega}}
-
+\newcommand{\Vt}{V_{\theta}}
+\newcommand{\expect}{\mathop{\mathbb{E}}}
+\newcommand{\RE}{r}
 \newcommand{\Vm}{V_{\text{max}}}
 \newcommand{\Rm}{R_{\text{max}}}
 \newcommand{\Tvan}{\T^{\infty}_{\param}}
+\newcommand{\Ibeta}{I_{\param}}
+
+
 \makeindex
 
 \usepackage[backend=biber, citestyle=authoryear, bibstyle=authoryear, isbn=false, url=false, doi=false, eprint=false, natbib=true, sorting=nty, uniquename=init]{biblatex}
@@ -145,6 +159,7 @@ the degree of Master of Science.
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
 TODO
+Need to talk about nishanth here ? To check
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

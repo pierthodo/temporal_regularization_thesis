@@ -172,7 +172,7 @@ The aim is to find a function $V_\theta: \mathbb{S} \rightarrow \mathbb{R}$ para
 \end{equation}
 which yields the following update by taking the derivative with respect to $\theta$:
 \begin{equation}
-    \theta_{t+1} = \theta_t + \alpha (V^{\pol}(s_t) - V_{\theta_t}(s_t)) \nabla_{\theta_t} \Vt(s_t)
+    \theta_{t+1} = \theta_t + \alpha (V^{\pol}(s_t) - V_{\theta_t}(s_t)) \nabla_{\theta_t} V_{\theta_t}(s_t)
 \end{equation}
 where $\alpha$ is a learning rate.\\
 In practice $V^{\pol}$ is approximated using Monte Carlo rollouts (\cite{suttonreinforcement}) or TD methods (\cite{sutton1988learning}).
@@ -185,9 +185,7 @@ Convergence in the stochastic setting is usually proven by casting the learning 
 where $\T: \mathbb{R^{|\mathbb{S}|}} \rightarrow \mathbb{R^{|\mathbb{S}|}}$ is a contraction operator and $w(t)$ is a noise term. 
 As an example, TD(0) is known to converge to the fixed point of the bellman operator (\cite{sutton1988learning}):
 \begin{equation}
-\begin{split}
-    \T \Vt(s_t) &= \expect_{s_{t+1} \sim \pol} [r(s_t) + \gamma \Vt(s_{t+1})]\\
-\end{split}
+    \T \Vt(s_t) = \expect_{s_{t+1} \sim \pol} [r(s_t) + \gamma \Vt(s_{t+1})]
 \end{equation}
 However, in practice we have access to a noisy version of the operator $\widetilde{\T}$ due to sampling process hence the noise term $w(t)$:
 \begin{equation}
