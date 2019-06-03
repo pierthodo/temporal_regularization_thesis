@@ -12,11 +12,11 @@ Let us focus on the simplest case where the value estimate at the current state 
          + \gamma \param \sum_{s_{t-1} \in \s}\frac{p(s_t|s_{t-1}) p(s_{t-1})}{p(s_t)} \Vr(s_{t-1}),
     \end{split}
 \end{equation}
-for a parameter $\param \in [0,1]$ and $p(s_{t+1}|s_t)$ the transition probability induced by the policy $\pol$. It can be rewritten in matrix form as $\Vr = r + \gamma (((1-\param) P^{\pol} + \param \widetilde{P^{\pol}})\Vr) $, where $\widetilde{P^{\pol}}$ corresponds to the reversal Markov chain of the MDP.
+for a parameter $\param \in [0,1]$ and $p(s_{t+1}|s_t)$ the transition probability induced by the policy $\pol$. It can be rewritten in matrix form as $\Vrmat r = r + \gamma (((1-\param) P^{\pol} + \param \widetilde{P^{\pol}})\Vrmat) $, where $\widetilde{P^{\pol}}$ corresponds to the reversal Markov chain of the MDP.
 We define a temporally regularized Bellman operator as:
 \begin{equation}
 \label{eqn:temp_reg_bellman_op}
-    \regT v_{\param} = r + \gamma ((1-\param) P^{\pol}v_{\param} + \param \widetilde{P^{\pol}} v_{\param}).
+    \regT \Vrmat = r + \gamma ((1-\param) P^{\pol}v_{\param} + \param \widetilde{P^{\pol}} \Vrmat).
 \end{equation}
 To alleviate the notation, we denote $P^{\pol}$ as $P$ and $\widetilde{P^{\pol}}$ as $\widetilde{P}$.
 \begin{remark}
@@ -29,7 +29,7 @@ We can prove that this operator has the following property.
 % The convex combination of two row stochastic matrices is also row stochastic.
 % \end{lemma}
 \begin{theorem}
-The operator $\regT$ has a unique fixed point $\Vr^{\pol}$ and $\regT$ is a contraction mapping.
+The operator $\regT$ has a unique fixed point $\Vropt$ and $\regT$ is a contraction mapping.
 \end{theorem}
 \begin{proof}
 We first prove that $\regT$ is a contraction mapping in $L_\infty$ norm. We have that
@@ -42,7 +42,7 @@ We first prove that $\regT$ is a contraction mapping in $L_\infty$ norm. We have
 \end{equation}
 where the last inequality uses the fact that the convex combination of two row stochastic matrices is also row stochastic (the proof can be found in lemma \ref{lem:stochastic_matrix_convex_combination}).
 %is obtained with Lemma~\ref{lem:stochastic_matrix_convex_combination}.
-Then using Banach fixed point theorem, we obtain that $\Vr^{\pol}$ is a unique fixed point. 
+Then using Banach fixed point theorem, we obtain that $\Vropt$ is a unique fixed point. 
 \end{proof}
 
 \begin{lemma}
@@ -75,20 +75,16 @@ It is known that $P^{\pol}$ and $\widetilde{P^{\pol}}$ have the same stationary 
     \end{split}
 \end{equation}
 \end{proof} 
-%COMMENT(pierre-luc): $P$ and $(1-\param) : order is confusing. I would write something like:
-% The stationary distribution induced by $(1-\param) P + \param \widetilde{P}$ is $\mu$: the stationary distribution under the original Markov chain $P$.
 
-
-%COMMENT(pierre-luc): You first need to start this paragraph by saying that there is indeed a bias, because this is not something that you would expect from a "regular" policy evaluation operator. Then quickly reinsure the reader that this bias is not evil because the resulting operator as some desirable properties : a knob for variance reduction. 
 In the policy evaluation setting, the bias between the original value function $\V^{\pol}$ and the regularized one $\V^{\pol}_{\param}$ can be characterized as a function of the difference between $P$ and its Markov reversal $\widetilde{P}$, weighted by $\param$ and the reward distribution.
 
 %COMMENT(pierre-luc): You need to say that these Neumann series converge. This follows from your contraction argument above. You can state Puterman corollary C.4 for the existence of the series and its inverse. 
 
 \begin{proposition}
-Let $v^{\pol} = \sum_{i=0}^{\infty} \gamma^i P^i r$ and $v^{\pol}_{\param} = \sum_{i=0}^{\infty} \gamma^i ((1-\param) P + \param \widetilde{P})^i r$. We have that
+Let $\Vmatopt = \sum_{i=0}^{\infty} \gamma^i P^i r$ and $\Vrmatopt = \sum_{i=0}^{\infty} \gamma^i ((1-\param) P + \param \widetilde{P})^i r$. We have that
 \begin{equation}
     \begin{split}
-        \norm{v^{\pol} - v^{\pol}_{\param}}_{\infty} &= \norm{\sum_{i=0}^{\infty} \gamma^i (P^i-((1-\param) P + \param \widetilde{P})^i) r}_{\infty}
+        \norm{\Vmat - \Vrmatopt}_{\infty} &= \norm{\sum_{i=0}^{\infty} \gamma^i (P^i-((1-\param) P + \param \widetilde{P})^i) r}_{\infty}
         \leq \sum_{i=0}^{\infty} \gamma^i \norm{ (P^i-((1-\param) P + \param \widetilde{P})^i) r}_{\infty}.
     \end{split}
 \end{equation}
@@ -100,10 +96,10 @@ By the property of reversal Markov chains and lemma \ref{cor:same_stationary_dis
 \end{remark}
 
 \begin{remark}
-It can be interesting to note that if the chain is reversible, meaning that $P = \widetilde{P}$, then the fixed point of both operators is the same, that is $v^\pol = v_\param^\pol$.
+It can be interesting to note that if the chain is reversible, meaning that $P = \widetilde{P}$, then the fixed point of both operators is the same, that is $\Vmat = \Vrmat$.
 \end{remark}
 
-\subsection{Discounted average reward case:} The temporally regularized MDP has the same discounted average reward as the original one as it is possible to define the discounted average reward \cite{tsitsiklis2002average} as a function of the stationary distribution $\pi$, the reward vector and $\gamma$ . This leads to the following property (the proof can be found in the appendix).
+\subsection{Discounted average reward case:} The temporally regularized MDP has the same discounted average reward as the original one as it is possible to define the discounted average reward \citep{tsitsiklis2002average} as a function of the stationary distribution $\pi$, the reward vector and $\gamma$ . This leads to the following property (the proof can be found in the appendix).
 
 \begin{proposition}
 For a reward vector r, the MDPs defined by the the transition matrices $P$ and $(1-\param) P + \param \widetilde{P}$ have the same average reward $\rho$.
@@ -112,23 +108,23 @@ Intuitively, this means that temporal regularization only reweighs the reward on
 
 %COMMENT(pierre-luc): You could also call this section "Higher Order Temporal Regularization". In RLS/ARMA/signal processing, I think they refer to the "order" of their filter when they incorporate older information. See LTI filters.
 \subsection{Temporal Regularization as a time series prediction problem:}
-It is possible to cast this problem of temporal regularization as a time series prediction problem, and use richer models of temporal dependencies, such as exponential smoothing \cite{gardner2006exponential}, ARMA model~\cite{box94}, etc. We can write the update in a general form using $n$ different regularizers ($\widetilde{v_0},\widetilde{v_1}...\widetilde{v_{n-1}}$):
+It is possible to cast this problem of temporal regularization as a time series prediction problem, and use richer models of temporal dependencies, such as exponential smoothing \citep{gardner2006exponential}, ARMA model~\citep{box94}, etc. We can write the update in a general form using $n$ different regularizers ($\widetilde{v_0},\widetilde{v_1}...\widetilde{v_{n-1}}$):
 \begin{equation}
     \V(s_t) = r(s) + \gamma \sum_{i=0}^{n-1} [\param(i) \widetilde{\V}_i(s_{t+1})],
 \end{equation}
 where $\widetilde{\V}_0(s_{t+1}) = \V(s_{t+1})$ and $\sum_{i=0}^{n-1} \param(i) = 1$. For example, using exponential smoothing where $\widetilde{\V}(s_{t+1}) = (1-\lambda) \V(s_{t-1}) + (1-\lambda)\lambda \V(s_{t-2})...$, the update can be written in operator form as:
 \begin{equation}
     \label{eq:exp_smooth}
-    \regT v = r + \gamma \bigg(\left(1-\param\right) Pv + \param \left(1-\lambda\right) \sum_{i=1}^{\infty} \lambda^{i-1} \widetilde{P}^i v\bigg),
+    \regT \Vrmat = r + \gamma \bigg(\left(1-\param\right) Pv + \param \left(1-\lambda\right) \sum_{i=1}^{\infty} \lambda^{i-1} \widetilde{P}^i \Vrmat \bigg),
 \end{equation}
 and a similar argument as Theorem 1 can be used to show the contraction property. The bias of exponential smoothing in policy evaluation can be characterized as:
 \begin{equation}
-        \norm{v^{\pol} - v^{\pol}_{\param}}_{\infty} \leq  \sum_{i=0}^{\infty} \gamma^i \norm{ (P^i-((1-\param) P + \param (1-\lambda) \sum_{j=1}^{\infty} \lambda^{j-1} \widetilde{P}^j)^i) r}_{\infty}.
+        \norm{\Vmatopt - \Vrmatopt}_{\infty} \leq  \sum_{i=0}^{\infty} \gamma^i \norm{ (P^i-((1-\param) P + \param (1-\lambda) \sum_{j=1}^{\infty} \lambda^{j-1} \widetilde{P}^j)^i) r}_{\infty}.
 \end{equation}
 
-Using more powerful regularizers could be beneficial, for example to reduce variance by smoothing over more values (exponential smoothing) or to model the trend of the value function through the trajectory using trend adjusted model ~\cite{gardner1985exponential}. An example of a temporal policy evaluation with temporal regularization using exponential smoothing is provided in Algorithm \ref{alg:pol_eval_exp_smoothing}.
+Using more powerful regularizers could be beneficial, for example to reduce variance by smoothing over more values (exponential smoothing) or to model the trend of the value function through the trajectory using trend adjusted model ~\citep{gardner1985exponential}. An example of a temporal policy evaluation with temporal regularization using exponential smoothing is provided in Algorithm \ref{alg:pol_eval_exp_smoothing}.
 \begin{algorithm}[H]
-\caption{Policy evaluation with exponential smoothing}
+\caption[Policy evaluation with Temporal Regularization]{Policy evaluation with exponential smoothing}
 \begin{algorithmic}[1]
     \STATE Input: $\pi,\alpha,\gamma,\param,\lambda$
     \STATE $p = \V(s)$
@@ -147,7 +143,7 @@ Using more powerful regularizers could be beneficial, for example to reduce vari
 Temporal regularization can be extended to MDPs with actions by  modifying the target of the value function (or the Q values) using temporal regularization. Experiments (Sec.~\ref{sec:expe:drl}) present an example of how temporal regularization can be applied within an actor-critic framework. The theoretical analysis of the control case is outside the scope of this paper.
 
 \subsection{Temporal difference with function approximation:}
-It is also possible to extend temporal regularization using function approximation such as  semi-gradient TD \cite{sutton2017reinforcement}. 
+It is also possible to extend temporal regularization using function approximation such as  semi-gradient TD \citep{sutton2017reinforcement}. 
 %COMMENT(pierre-luc): Semi-gradient is a new terminology introduced in the draft of the new S&B textbook. Not found in 1998
 Assuming a function $\V_{\theta}^{\param}$ parameterized by $\theta$, we can consider $r(s) + \gamma ((1-\param)\V_{\theta}^{\param}(s_{t+1}) + \param \V_{\theta}^{\param}(s_{t-1})) - \V_{\theta}^{\param}(s_t)$  as the target and differentiate with respect to $\V_{\theta}^{\param}(s_{t})$. An example of a temporally regularized semi-gradient TD algorithm can be found in algorithm \ref{reg_td}.
 
@@ -172,7 +168,7 @@ We now presents empirical results illustrating potential advantages of temporal 
 
 
 \subsection{Mixing time}
-This first experiment showcases that the underlying Markov chain of a MDP can have a smaller mixing time when temporally regularized. The mixing time can be seen as the number of time steps required for the Markov chain to get \emph{close enough} to its stationary distribution. Therefore, the mixing time also determines the rate at which policy evaluation will converge to the optimal value function~\cite{baxter2001infinite}. 
+This first experiment showcases that the underlying Markov chain of a MDP can have a smaller mixing time when temporally regularized. The mixing time can be seen as the number of time steps required for the Markov chain to get \emph{close enough} to its stationary distribution. Therefore, the mixing time also determines the rate at which policy evaluation will converge to the optimal value function~\citep{baxter2001infinite}. 
 %COMMENT(pierre-luc) : can also cite Puterman, spectral radius. Also, not just for control (you say "optimal") : also true for policy evaluation.
 %COMMENT(pierre-luc): Mixing quickly is one thing, but mixing quickly and returning an answer not too far away from the actual answer (bias) is very important. When reading this paragraph, I would need to convince myself that this is not a vacuous demonstration, that the resulting fast-mixing chain is still somewhat related to the original problem.
 We consider a synthetic MDP with 10 states where transition probabilities are sampled from the uniform distribution. Let $P^{\infty}$ denote a matrix where columns consists of the stationary distribution $\mu$. To compare the mixing time, we evaluate the error corresponding to the distance of $P^i$ and $\big((1-\param)P+\param \widetilde{P}\big)^i$ to the convergence point $P^{\infty}$ after $i$ iterations.
@@ -183,7 +179,7 @@ One explanation is that transition matrices with extreme probabilities (low or h
 \begin{figure*}
 	\centering
 	\includegraphics[scale=0.7]{./fig/Markov_mixing.pdf}
-\caption{Distance between the stationary transition probabilities and the estimated transition probability for different values of regularization parameter $\param$.}
+\caption[Mixing time experiment]{Distance between the stationary transition probabilities and the estimated transition probability for different values of regularization parameter $\param$.}
 \label{fig:mixing}
 \end{figure*}
 
@@ -199,9 +195,8 @@ We observe that increasing $N$, meaning more states get rewards close to one ano
 
 \begin{figure*}
 	\centering
-
 	\includegraphics[scale=0.7]{./fig/Bias_N.pdf}
-\caption{Mean difference between $\Vr^{\pi}$ and $\V^{\pi}$ given the regularization parameter $\param$, for different amount of smoothed states $N$.}
+\caption[Bias induced by Temporal Regularization]{Mean difference between $\Vopt$ and $\Vropt$ given the regularization parameter $\param$, for different amount of smoothed states $N$.}
 \label{fig:mod}
 \end{figure*}
 
@@ -209,7 +204,7 @@ We observe that increasing $N$, meaning more states get rewards close to one ano
 \subsection{Variance}
 \label{sec:expe:variance}
 % COMMENT(pierre-luc) : this should be emphasized earlier.
-The primary motivation of this work is to reduce variance, therefore we now consider an experiment  targeting this aspect. Figure~\ref{fig:MDP} shows an example of a synthetic, 3-state MDP, where the variance of $S_1$ is (relatively) high. We consider an agent that is evolving in this world, changing states following the stochastic policy indicated. We are interested in the error when estimating the optimal state value of $S_1$, $\V^*(S_1)$, with and without temporal regularization, denoted $\Vr^{\pi}(S_1)$, $\V^{\pi}(S_1)$, respectively.
+The primary motivation of this work is to reduce variance, therefore we now consider an experiment  targeting this aspect. Figure~\ref{fig:MDP} shows an example of a synthetic, 3-state MDP, where the variance of $S_1$ is (relatively) high. We consider an agent that is evolving in this world, changing states following the stochastic policy indicated. We are interested in the error when estimating the optimal state value of $S_1$, $\Vopt(S_1)$, with and without temporal regularization, denoted $\Vropt(S_1)$, $\Vopt (S_1)$, respectively.
 
 Figure~\ref{fig:perf_MDP} shows these errors at each iteration, averaged over $100$ runs. We observe that temporal regularization indeed reduces the variance and thus helps the learning process by making the value function easier to learn.
 
@@ -217,7 +212,7 @@ Figure~\ref{fig:perf_MDP} shows these errors at each iteration, averaged over $1
 	\centering
 
 	\includegraphics[scale=0.7]{./fig/Exp_2.png}
-\caption{Synthetic MDP where state $S_1$ has high variance.}
+\caption[Synthetic MDP]{Synthetic MDP where state $S_1$ has high variance.}
 \label{fig:MDP}
 \end{figure*}
 
@@ -225,7 +220,7 @@ Figure~\ref{fig:perf_MDP} shows these errors at each iteration, averaged over $1
 	\centering
 
 	\includegraphics[scale=0.7]{./fig/Exp_2_result.png}
-\caption{Left plot shows absolute difference between original ($\V^{\pi}(S_1)$) and regularized ($\Vr^{\pi}(S_1)$) state value estimates to the optimal value $\V^*(S_1)$. Right plot shows the variance of the estimates $\V$.}
+\caption[Variance reduction]{Left plot shows absolute difference between original ($\V (S_1)$) and regularized ($\Vr (S_1)$) state value estimates to the optimal value $\Vopt (S_1)$. Right plot shows the variance of the estimates $\V$.}
 \label{fig:perf_MDP}
 \end{figure*}
 
@@ -239,13 +234,13 @@ We first notice that the overall propagation of the information in the regulariz
 \begin{figure}
     \centering
     \includegraphics[scale=0.44]{./fig/room.png}
-    \caption{Proximity of the estimated state value to the optimal value after $N$ trajectories. Top row is the original room environment and bottom row is the regularized one ($\param = 0.5$). Darker is better.}
+    \caption[Propagation of the information]{Proximity of the estimated state value to the optimal value after $N$ trajectories. Top row is the original room environment and bottom row is the regularized one ($\param = 0.5$). Darker is better.}
     \label{fig:room}
 \end{figure}
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.60]{./fig/room_perf.pdf}
-\caption{Benefits of complex regularizers on the room domain.}
+\caption[Complex regularizers]{Benefits of complex regularizers on the room domain.}
 \label{fig:room_perf}
 \end{figure}
 
@@ -258,32 +253,30 @@ The next experiment illustrates a major strength of temporal regularization, tha
 Figure~\ref{fig:perf_MDP_noisy} shows these errors, averaged over 1000 repetitions, for different values of noise variance $\sigma^2$. We observe that as the noise variance increases, the un-regularized estimate becomes less accurate, while temporal regularization is more robust. Using more complex regularizer can improve performance as shown in the previous section but this potential gain comes at the price of a potential loss in case of model misfit. Fig.~\ref{fig:smoothing} shows the absolute distance from the regularized state estimate (using exponential smoothing) to the optimal value while varying $\lambda$ (higher $\lambda$ = more smoothing). Increasing smoothing improves performance up to some point, but when $\lambda$ is not well fit the bias becomes too strong and performance declines. This is a classic bias-variance tradeoff. This experiment highlights a case where temporal regularization is effective even in the absence of smoothness in the state space (which other regularization methods would target). This is further highlighted in the next experiments.
 
 \begin{figure}
-\begin{minipage}[c]{0.45\linewidth}
 \centering
-\includegraphics[height=4.5cm,width=\linewidth]{./fig/noisy_walk.pdf}
-\caption{Absolute distance from the original ( $\theta^\pi$) and the regularized ($\theta^\pi_\param$) state value estimates to the optimal parameter $\theta^*$ given the noise variance $\sigma^2$ in state sensors.}
+\includegraphics[scale=0.6]{./fig/noisy_walk.pdf}
+\caption[Noisy states]{Absolute distance from the original ( $\theta^\pi$) and the regularized ($\theta^\pi_\param$) state value estimates to the optimal parameter $\theta^*$ given the noise variance $\sigma^2$ in state sensors.}
 \label{fig:perf_MDP_noisy}
-\end{minipage}
-\hfill
-\begin{minipage}[c]{0.45\linewidth}
+\end{figure}
+
+\begin{figure}
 \centering
-\includegraphics[height=4.5cm,width=\linewidth]{./fig/error_noisy.pdf}
-\caption{Impact of complex regularizer parameterization ($\lambda$) on the noisy walk using exponential smoothing.}
+\includegraphics[scale=0.6]{./fig/error_noisy.pdf}
+\caption[Impact of complex regularizers]{Impact of complex regularizer parameterization ($\lambda$) on the noisy walk using exponential smoothing.}
 \label{fig:smoothing}
-\end{minipage}%
 \end{figure}
 
 \subsection{Deep reinforcement learning}
 \label{sec:expe:drl}
 
-To showcase the potential of temporal regularization in high dimensional settings, we adapt an actor-critic based method (PPO \cite{schulman2017proximal}) using temporal regularization. More specifically, we incorporate temporal regularization as exponential smoothing in the target of the critic.  PPO uses the general advantage estimator $\hat{A}_t = \delta_t + \gamma \lambda \delta_{t+1} + ... + (\gamma \lambda)^{T-t+1} \delta_{T}$ where $\delta_t = r_t + \gamma v(s_{t+1}) - v(s_{t})$. We regularize $\delta_t$ such that $\delta_t^{\beta} = r_t + \gamma ((1-\beta)v(s_{t+1}) + \beta \widetilde{v}(s_{t-1}))) - v(s_{t})$ using exponential smoothing $\widetilde{v}(s_{t}) = (1-\lambda)v(s_t) + \lambda \widetilde{v}(s_{t-1})$ as described in Eq.~(\ref{eq:exp_smooth}). $\widetilde{v}$ is an exponentially decaying sum over all $t$ previous state values encountered in the trajectory.
-We evaluate the performance in the Arcade Learning Environment ~\cite{bellemare2013arcade}, where we consider the following performance measure:
+To showcase the potential of temporal regularization in high dimensional settings, we adapt an actor-critic based method (PPO \citep{schulman2017proximal}) using temporal regularization. More specifically, we incorporate temporal regularization as exponential smoothing in the target of the critic.  PPO uses the general advantage estimator $\hat{A}_t = \delta_t + \gamma \lambda \delta_{t+1} + ... + (\gamma \lambda)^{T-t+1} \delta_{T}$ where $\delta_t = r_t + \gamma v(s_{t+1}) - v(s_{t})$. We regularize $\delta_t$ such that $\delta_t^{\beta} = r_t + \gamma ((1-\beta)v(s_{t+1}) + \beta \widetilde{v}(s_{t-1}))) - v(s_{t})$ using exponential smoothing $\widetilde{v}(s_{t}) = (1-\lambda)v(s_t) + \lambda \widetilde{v}(s_{t-1})$ as described in Eq.~(\ref{eq:exp_smooth}). $\widetilde{v}$ is an exponentially decaying sum over all $t$ previous state values encountered in the trajectory.
+We evaluate the performance in the Arcade Learning Environment ~\citep{bellemare2013arcade}, where we consider the following performance measure:
 \begin{equation}
 \label{eqn:expe:drl_measure}
     \frac{\text{regularized} - \text{baseline}}{\text{baseline} - \text{random}}.
 \end{equation}
 
-The hyper-parameters for the temporal regularization are $\param = \lambda = 0.2$ and a decay of $1\mathrm{e}^{-5}$. Those are selected on 7 games and 3 training seeds. All other hyper-parameters correspond to the one used in the PPO paper. Our implementation\footnote{The code can be found \url{https://github.com/pierthodo/temporal_regularization}.} is based on the publicly available OpenAI codebase~\cite{baselines}. The previous four frames are considered as the state representation~\cite{mnih2015human}.
+The hyper-parameters for the temporal regularization are $\param = \lambda = 0.2$ and a decay of $1\mathrm{e}^{-5}$. Those are selected on 7 games and 3 training seeds. All other hyper-parameters correspond to the one used in the PPO paper. Our implementation\footnote{The code can be found \url{https://github.com/pierthodo/temporal_regularization}.} is based on the publicly available OpenAI codebase~\citep{baselines}. The previous four frames are considered as the state representation~\citep{mnih2015human}.
 For each game, $10$ independent runs ($10$ random seeds) are performed. 
 
 
@@ -292,24 +285,30 @@ The results reported in Figure~\ref{fig:graph_atari} show that adding temporal r
 \begin{figure}
     \centering
     \includegraphics[width=13cm,height=4cm]{./fig/bar_atari.png}
-    \caption{Performance (Eq.~\ref{eqn:expe:drl_measure}) of a temporally regularized PPO on a suite of Atari games.}
+    \caption[Deep Reinforcement Learning performance]{Performance (Eq.~\ref{eqn:expe:drl_measure}) of a temporally regularized PPO on a suite of Atari games.}
     \label{fig:graph_atari}
-\end{figure}
+\end{figure}[H]
 The full performance for each game can be found in figure \ref{fig:my_label}.
 \begin{figure}
     \centering
     \includegraphics[scale=0.5]{./fig/plot_atari.png}
-    \caption{Average reward per episode on Atari games.}
+    \caption[Full results Deep Reinforcement Learning]{Average reward per episode on Atari games.}
     \label{fig:my_label}
 \end{figure}
-
+\subsection{Negative results on continuous control..}
+\begin{figure}
+	\includegraphics[scale=0.4]{./fig/mujoco_temp_reg.pdf}
+\end{figure}
+Bring up negative results and show maybe learning parameter can help ? Who knows
+SHow with high noise can still help but still learning injured here. Motivate the need for next work.. 
+In this setting Temporal regularization does not appear to perform well even when Gaussian noise is introduced in the observation. We hypothesize that the variance of the value function is not a \emph{big enough} issue compared to the bias induced by smoothing \emph{important states}. Indeed in Temporal regularization there is no way to decide which state to smooth or not. For example when falling of a cliff, one would want an algorithm that decide to not smooth the estimates. This issue is tackled in the next chapter of this thesis by introducing an algorithm that can learn such a state dependent smoothing coefficient. 
 \section{Discussion}
 
 \subsection{Noisy states:}
 
-Is is often assumed that the full state can be determined, while in practice, the Markov property rarely holds. This is the case, for example, when taking the four last frames to represent the state in Atari games~\cite{mnih2015human}. 
+Is is often assumed that the full state can be determined, while in practice, the Markov property rarely holds. This is the case, for example, when taking the four last frames to represent the state in Atari games~\citep{mnih2015human}. 
 
-A problem that arises when treating a partially observable MDP (POMDP) as a fully observable is that it may no longer be possible to assume that the value function is smooth over the state space~\cite{singh1994learning}.
+A problem that arises when treating a partially observable MDP (POMDP) as a fully observable is that it may no longer be possible to assume that the value function is smooth over the state space~\citep{singh1994learning}.
 %COMMENT(pierre-luc): Need citation here. Perhaps "Learning Without State-Estimation in Partially Observable Markovian Decision Processes" by Singh 1994 for general phenomenon of "aliasing" when using function approximation. 
 For example, the observed features may be similar for two states that are intrinsically different, leading to highly different values for states that are nearby in the state space. Previous experiments on noisy state representation (Sec.~\ref{sec:expe:noisy_state}) and on the Atari games (Sec.~\ref{sec:expe:drl}) show that temporal regularization provides robustness to those cases. This makes it an appealing technique in real-world environments, where it is harder to provide the agent with the full state.
 % COMMENT(pierre-luc) : the paper "On the Role of Tracking in Stationary Environments" by Sutton, Koop, Silver (2009) is related to this idea of "temporal smoothing". They develop the idea that "tracking" can be useful under partial observability (extremenly improverished features). In fact, their "Black and white" world would have been a nice experiment to try in this paper.
@@ -322,9 +321,9 @@ The bias induced by the regularization parameter $\param$ can be detrimental for
 \subsection{Smoother objective:}
 
 %COMMENT(pierre-luc) : "shape" is vague
-Previous work~\cite{smooth_value} looked at how the smoothness of the objective function relates to the convergence speed of RL algorithms.  An analogy can be drawn with convex optimization where the rate of convergence is dependent on the Lipschitz (smoothness) constant ~\cite{boyd2004convex}. 
+Previous work~\citep{smooth_value} looked at how the smoothness of the objective function relates to the convergence speed of RL algorithms.  An analogy can be drawn with convex optimization where the rate of convergence is dependent on the Lipschitz (smoothness) constant ~\citep{boyd2004convex}. 
 By smoothing the value temporally we argue that the optimal value function can be smoother. This would be beneficial in high-dimensional state space where the use of deep neural network is required. This could explain the performance displayed using temporal regularization on Atari games (Sec.~\ref{sec:expe:drl}).
-The notion of temporal regularization is also behind multi-step methods~\cite{sutton1998reinforcement}; it may be worthwhile to further explore how these methods are related.
+The notion of temporal regularization is also behind multi-step methods~\citep{sutton1998reinforcement}; it may be worthwhile to further explore how these methods are related.
 %TODO fix boyd citation 
 
 \subsection{Policy Gradient Temporal Regularization}
@@ -336,7 +335,7 @@ The notion of temporal regularization is also behind multi-step methods~\cite{su
 \end{split}
 \end{equation}
 It is possible to see this formulation as some kind of entropy regularization where the regularization is done in trajectory space compared to PPO ect… where it is done in policy space. Another perspective is to view $\pi$ as a time series and apply some entropy regularization to the prediction of the time series. Some of the advantages of doing this kind of regularization could be more consistent behavior in time, exploration, variance reduction.. \\
-Theoretically we want to properly define this entropy using concepts of dynamical system and prove its potential convergence/convexity following the proof's used \cite{neu2017unified}.\\
+Theoretically we want to properly define this entropy using concepts of dynamical system and prove its potential convergence/convexity following the proof's used \citep{neu2017unified}.\\
 More particularly in dynamical system there are several ways to define entropy. The community has not agreed on one in particularly form. Many of them are based on the kolmogorov sinai entropy. Intuitively they often define the entropy over each partition of your dynamical system and take a sup over that. In our case depending on how we average over the past we would implicitely define our partition function. This reference \url{http://prac.im.pwr.edu.pl/~downar/english/documents/entropy.pdf} is a good summary of the different form of entropy used. In particular I believe we can use something similar to the dynamical entropy explained in section 3.4.
 
-Intuitively we want to minimize the "temporal entropy" when you are in an option/state of your dynamical system to get coherent behavior and maximize it when you change state/option. It is very related to option and deliberation cost \cite{harb2017waiting} as they minimize the entropy in an option by adding a cost to changing option. I believe deliberation cost can actually be cast as some kind of entropy minimization where your option defines the partition function. In our case by simply taking a combination of the previous step(or more) it is kind like implicitly defining an option with states that are around you.
+Intuitively we want to minimize the "temporal entropy" when you are in an option/state of your dynamical system to get coherent behavior and maximize it when you change state/option. It is very related to option and deliberation cost \citep{harb2017waiting} as they minimize the entropy in an option by adding a cost to changing option. I believe deliberation cost can actually be cast as some kind of entropy minimization where your option defines the partition function. In our case by simply taking a combination of the previous step(or more) it is kind like implicitly defining an option with states that are around you.

@@ -20,7 +20,7 @@
 \newsubfloat{figure}  % must follow hyperref
 \hypersetup{
 pdfauthor = {Pierre Thodoroff},
-pdftitle = {Temporal Regularization for Markov Decision Process},
+pdftitle = {Temporal smoothing in Reinforcement Learning},
 pdfsubject = {Subject},
 pdfkeywords = {reinforcement learning},
 pdfcreator = {LaTeX with the hyperref package},
@@ -42,7 +42,6 @@ citecolor = [HTML]{0000FF},
 \usetikzlibrary{shapes,arrows}
 \usepackage{standalone}
 \usepackage{amsmath,algorithmic,algorithm,setspace}
-\usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{mathtools}
@@ -56,6 +55,7 @@ citecolor = [HTML]{0000FF},
 \usepackage{caption}
 \usepackage{verbatim}
 \usepackage{wrapfig}
+\usepackage{hyperref}       % hyperlinks
 % Custom commands
 
 \newtheorem{theorem}{Theorem}
@@ -75,9 +75,17 @@ citecolor = [HTML]{0000FF},
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\T}{\mathcal{T}}
 \newcommand{\Q}{Q}
-\newcommand{\Vr}{\V_{\param}}
 \newcommand{\V}{V}
-\newcommand{\regT}{\T^{\pol}_{\param}}
+\newcommand{\Vmat}{v}
+\newcommand{\Vrmat}{v^{\param}}
+\newcommand{\Vmatopt}{v^{\pol}}
+\newcommand{\Vrmatopt}{v^{\pol,\param}}
+\newcommand{\Vr}{\V^{\param}}
+\newcommand{\Vropt}{\V^{\pol,\param}}
+\newcommand{\Vopt}{\V^{\pol}}
+\newcommand{\Vrt}{\V^{\param}_{\theta}}
+\newcommand{\Vrto}{\V^{\param}_{\theta,\omega}}
+\newcommand{\regT}{\T^{\param}}
 \newcommand{\regTo}{\T^{*}_{\param}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\dr}{\widetilde{\delta}}
@@ -115,7 +123,7 @@ citecolor = [HTML]{0000FF},
 \predate{\begin{center}\large}
 \postdate{\end{center}}
 
-\title{Exploiting trajectory information in Reinforcement Learning}
+\title{Temporal smoothing in Reinforcement Learning}
 \author{Pierre Thodoroff}
 \date{\today}
 \renewcommand\maketitlehookb{
@@ -158,8 +166,13 @@ the degree of Master of Science.
 \pagenumbering{roman}
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
-TODO
-Need to talk about nishanth here ? To check
+\begin{itemize}
+	\item Supervisors
+	\item Pierre luc, josh, jean, matthew, audrey, 
+	\item Nishanth joint work
+	\item Lucas work on recurrent learning derivation proof + experiment
+	\item Compute canada
+\end{itemize}
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -196,6 +209,11 @@ L'apprentissage par renforcement est un model d'apprentissage fréquemment utili
 % Introduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
+\listoffigures
+\clearpage
+\listofalgorithms
+\clearpage
+
 \pagenumbering{arabic}
 \chapter{Introduction}
 \input{chapters/introduction}

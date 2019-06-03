@@ -1,16 +1,13 @@
 
-\renewcommand{\V}{V_{\theta}}
-\renewcommand{\Vr}{\V_{\param}}
-
 
 In the previous chapter we regularized the value estimate by adding a regularization term to the objective(target). In this chapter we explore explicitly averaging the value estimate using exponential smoothing.
 
 
 The problem of disentangling signal from noise in sequential domains is not specific to Reinforcement Learning and has been extensively studied in the Supervised Learning literature. In this work, we leverage ideas from time series literature and Recurrent Neural Networks to address the robustness of value functions in Reinforcement Learning. We propose Recurrent Value Functions (RVFs): an exponential smoothing of the value function. The value function of the current state is defined as an exponential smoothing of the values of states visited along the trajectory where the value function of past states are summarized by the previous RVF.
 
-However, exponential smoothing along the trajectory can result in a bias when the value function changes dramatically through the trajectory (non-stationarity). This bias could be a problem if the environment encounters sharp changes, such as falling of a cliff, and the estimates are heavily smoothed. To alleviate this issue, we propose to use exponential smoothing on value functions using a trainable state-dependent emphasis function which controls the smoothing coefficients. Intuitively, the emphasis function adapts the amount of emphasis required on the current value function and the past RVF to reduce bias with respect to the optimal value estimate. In other words, the emphasis function identifies important states in the environment. An important state can be defined as one where \emph{its value differs significantly from the previous values along the trajectory}. For example, when falling off a cliff, the value estimate changes dramatically, making states around the cliff more salient. This emphasis function serves a similar purpose to a gating mechanism in a Long Short Term Memory cell of a Recurrent Neural Network \cite{hochreiter1997long}. 
+However, exponential smoothing along the trajectory can result in a bias when the value function changes dramatically through the trajectory (non-stationarity). This bias could be a problem if the environment encounters sharp changes, such as falling of a cliff, and the estimates are heavily smoothed. To alleviate this issue, we propose to use exponential smoothing on value functions using a trainable state-dependent emphasis function which controls the smoothing coefficients. Intuitively, the emphasis function adapts the amount of emphasis required on the current value function and the past RVF to reduce bias with respect to the optimal value estimate. In other words, the emphasis function identifies important states in the environment. An important state can be defined as one where \emph{its value differs significantly from the previous values along the trajectory}. For example, when falling off a cliff, the value estimate changes dramatically, making states around the cliff more salient. This emphasis function serves a similar purpose to a gating mechanism in a Long Short Term Memory cell of a Recurrent Neural Network \citep{hochreiter1997long}. 
 
-To summarize the contributions of this work, we introduce RVFs to estimate the value function of a state by exponentially smoothing the value estimates along the trajectory. RVF formulation leads to a natural way of learning an emphasis function which mitigates the bias induced by smoothing. We provide an asymptotic convergence proof in tabular settings by leveraging the literature on asynchronous stochastic approximation \cite{tsitsiklis1994asynchronous}. Finally, we perform a set of experiments to demonstrate the robustness of RVFs with respect to noise in continuous control tasks and provide a qualitative analysis of the learned emphasis function which provides interpretable insights into the structure of the solution.
+To summarize the contributions of this work, we introduce RVFs to estimate the value function of a state by exponentially smoothing the value estimates along the trajectory. RVF formulation leads to a natural way of learning an emphasis function which mitigates the bias induced by smoothing. We provide an asymptotic convergence proof in tabular settings by leveraging the literature on asynchronous stochastic approximation \citep{tsitsiklis1994asynchronous}. Finally, we perform a set of experiments to demonstrate the robustness of RVFs with respect to noise in continuous control tasks and provide a qualitative analysis of the learned emphasis function which provides interpretable insights into the structure of the solution.
 
 
 
@@ -18,80 +15,82 @@ To summarize the contributions of this work, we introduce RVFs to estimate the v
 
 \section{Recurrent Value Functions (RVFs)}
 \label{RLRL}
-As mentioned earlier, performance of value-based methods are often heavily impacted by the quality of the data obtained \cite{fox2015taming,pendrith1994reinforcement}. For example, in robotics, noisy sensors are common and can significantly hinder performance of popular methods \cite{romoff2018reward}. In this work, we propose a method to improve the robustness of value functions by estimating the value of a state $s_t$ using the estimate at time step $t$ and the estimates of previously visited states $s_i$ where $i < t$.
+As mentioned earlier, performance of value-based methods are often heavily impacted by the quality of the data obtained \citep{fox2015taming,pendrith1994reinforcement}. For example, in robotics, noisy sensors are common and can significantly hinder performance of popular methods \citep{romoff2018reward}. In this work, we propose a method to improve the robustness of value functions by estimating the value of a state $s_t$ using the estimate at time step $t$ and the estimates of previously visited states $s_i$ where $i < t$.
+\subsection{Algorithm}
 Mathematically, the Recurrent Value Function (RVF) of a state $s$ at time step $t$ is given by:
 \begin{equation}
 \label{value}
 \begin{split}
-    V^{\param}(s_t) &= \param(s_t) V(s_t) + (1 - \param(s_t)) V^{\param}(s_{t-1}), \\ 
+    \Vr (s_t) &= \param(s_t) V(s_t) + (1 - \param(s_t)) \Vr (s_{t-1}), \\ 
 \end{split}
 \end{equation}
-where  $\param(s_t) \in [0,1]$. $V^{\param}$ estimates the value of a state $s_t$ as a convex combination of current estimate $V(s_t)$ and previous estimate $V^{\param}(s_{t-1})$. $V^{\param}(s_{t-1})$ can be recursively expanded further, hence the name Recurrent Value Function. $\param$ is the emphasis function which updates the recurrent value estimate. 
+where  $\param(s_t) \in [0,1]$. $\Vr$ estimates the value of a state $s_t$ as a convex combination of current estimate $V(s_t)$ and previous estimate $\Vr(s_{t-1})$. $\Vr(s_{t-1})$ can be recursively expanded further, hence the name Recurrent Value Function. $\param$ is the emphasis function which updates the recurrent value estimate. 
 
 In contrast to traditional methods that attempt to minimize Eq. \ref{simple_loss}, the goal here is to find a set of parameters $\theta,\omega$ that minimize the following error:
 \begin{equation}
 \begin{split}
-    \mathcal{L}(\theta,\omega) &= \expect_{\pol} [(V^{\pol} - \vr)^2], \\
-	 \vr(s_t) &= \param_{\omega}(s_t) \V(s_t) + (1 - \param_{\omega}(s_t)) (\vr(s_{t-1})),
+    \mathcal{L}(\theta,\omega) &= \expect_{\pol} [(V^{\pol} - \Vrto)^2], \\
+	 \Vrto(s_t) &= \param_{\omega}(s_t) \V(s_t) + (1 - \param_{\omega}(s_t)) (\Vrto(s_{t-1})),
 \end{split}
 \label{loss_beta}
 \end{equation}
 where $\V$ is a function parametrized by $\theta$, and $\param_{\omega}$ is a function parametrized by $\omega$.
-This error is similar to the traditional error in Eq. \ref{simple_loss}, but we replace the value function with $\vr$. In practice, $V^{\pol}$ can be any target such as TD(0), TD(N), TD($\lambda$) or Monte Carlo \cite{sutton1998reinforcement} which is used in Reinforcement Learning.
+This error is similar to the traditional error in Eq. \ref{simple_loss}, but we replace the value function with $\Vrto$. In practice, $V^{\pol}$ can be any target such as TD(0), TD(N), TD($\lambda$) or Monte Carlo \citep{sutton1998reinforcement} which is used in Reinforcement Learning.
 
 We minimize Eq. \ref{loss_beta} by updating $\theta$ and $\omega$ using the semi-gradient technique which results in the following update rule:
 \begin{equation}
 \begin{split}
-	\theta &= \theta + \alpha \delta_t  \nabla_{\theta} \vr (s_t), \\
-	\omega &= \omega + \alpha \delta_t  \nabla_{\omega} \vr (s_t),
+	\theta &= \theta + \alpha \delta_t  \nabla_{\theta} \Vrto (s_t), \\
+	\omega &= \omega + \alpha \delta_t  \nabla_{\omega} \Vrto (s_t),
 \end{split}
 \end{equation}
-where $\delta_t = V^{\pol}(s_t) - \vr(s_t)$ is the TD error with RVF in the place of the usual value function. The complete algorithm using the above update rules can be found in Algorithm \ref{algo_rtd}.
+where $\delta_t = V^{\pol}(s_t) - \Vrto(s_t)$ is the TD error with RVF in the place of the usual value function. The complete algorithm using the above update rules can be found in Algorithm \ref{algo_rtd}.
 
 \begin{algorithm}[H]
 \caption{Recurrent Temporal Difference(0)}
 \begin{algorithmic}[1]
     \label{RTD}
     \STATE Input: $\pi$,$\gamma$,$\theta$,$\omega$
-    \STATE Initialize: $\vr(s_0) = \V(s_0)$
+    \STATE Initialize: $\Vrto(s_0) = \V(s_0)$
     \STATE OUTPUT: $\theta,\omega$ 
     \FOR{t}
         \STATE Take action $a \sim \pi(s_t)$ , observe $r(s_t),s_{t+1}$
-        \STATE $\vr(s_t) = \param_{\omega}(s_t) \V(s_t) + (1-\param_{\omega}(s_t)) \vr (s_{t-1})$ 
-        \STATE $\delta_t = V^{\pol}(s_t) - \vr(s_t)$ 
-        \STATE $\theta = \theta + \alpha \delta_t \nabla_{\theta} \vr(s_t) $ 
-        \STATE $\omega = \omega + \alpha \delta_t \nabla_{\omega} \vr(s_t)$ 
+        \STATE $\Vrto(s_t) = \param_{\omega}(s_t) \V(s_t) + (1-\param_{\omega}(s_t)) \Vrto (s_{t-1})$ 
+        \STATE $\delta_t = V^{\pol}(s_t) - \Vrto(s_t)$ 
+        \STATE $\theta = \theta + \alpha \delta_t \nabla_{\theta} \Vrto(s_t) $ 
+        \STATE $\omega = \omega + \alpha \delta_t \nabla_{\omega} \Vrto(s_t)$ 
     \ENDFOR
 \end{algorithmic}
 \label{algo_rtd}
 \end{algorithm}
 
-As discussed earlier, $\param_{\omega}$ learns to identify states whose value significantly differs from previous estimates. While optimizing for the loss function described in Eq. \ref{loss_beta}, the $\param_{\omega}(s_t)$ learns to bring the RVF $\vr$ closer to the target $V^{\pol}$. It does so by placing greater emphasis on whichever is closer to the target, either $\V(s_t)$ or $\vr(s_{t-1})$. Concisely, the updated behaviour can be split into four scenarios. A detailed description of these behaviours is provided in Table \ref{sample-table}. Intuitively, if the past is not aligned with the future, $\param$ will emphasize the present. Likewise, if the past is aligned with the future, then $\param$ will place less emphasis on the present. This behaviour is further explored in the experimental section.
+\subsection{Learning $\param$}
+As discussed earlier, $\param_{\omega}$ learns to identify states whose value significantly differs from previous estimates. While optimizing for the loss function described in Eq. \ref{loss_beta}, the $\param_{\omega}(s_t)$ learns to bring the RVF $\Vrto$ closer to the target $V^{\pol}$. It does so by placing greater emphasis on whichever is closer to the target, either $\V(s_t)$ or $\Vrto(s_{t-1})$. Concisely, the updated behaviour can be split into four scenarios. A detailed description of these behaviours is provided in Table \ref{sample-table}. Intuitively, if the past is not aligned with the future, $\param$ will emphasize the present. Likewise, if the past is aligned with the future, then $\param$ will place less emphasis on the present. This behaviour is further explored in the experimental section.
 
 \begin{table}[h]
 \caption{Behaviour of $\param$ based on the loss}
 \centering
 \begin{tabular}{c|c c } 
-  & \small{$V^{\pol}(s_t)>\vr(s_t)$} & \small{$V^{\pol}(s_t)<\vr(s_t)$} \\ 
+  & \small{$V^{\pol}(s_t)>\Vrto(s_t)$} & \small{$V^{\pol}(s_t)<\Vrto(s_t)$} \\ 
    \hline
- \small{$\V(s_t)>\vr(s_{t-1})$} & $\param \uparrow$ &  $\param \downarrow$ \\ 
- \small{$\V(s_t)<\vr(s_{t-1})$} & $\param \downarrow$ & $\param \uparrow$  \\ 
+ \small{$\V(s_t)>\Vrto(s_{t-1})$} & $\param \uparrow$ &  $\param \downarrow$ \\ 
+ \small{$\V(s_t)<\Vrto(s_{t-1})$} & $\param \downarrow$ & $\param \uparrow$  \\ 
 \end{tabular}
 \vspace{7pt}
 \label{sample-table}
 \end{table}
 
-Note that, the gradients of $\vr$ take a recursive form (gradient through time) as shown in Eq. \ref{grad_rvf}. The gradient form is similar to LSTM \cite{hochreiter1997long}, and GRU \cite{chung2014empirical} where $\param$ acts as a gating mechanism that controls the flow of gradient. LSTM uses a gated exponential smoothing function on the hidden representation to assign credit more effectively. In contrast, we propose to exponentially smooth the outputs (value functions) directly rather than the hidden state. This gradient can be estimated using backpropagation through time by recursively applying the chain rule where:
+Note that, the gradients of $\Vrto$ take a recursive form (gradient through time) as shown in Eq. \ref{grad_rvf}. The gradient form is similar to LSTM \citep{hochreiter1997long}, and GRU \citep{chung2014empirical} where $\param$ acts as a gating mechanism that controls the flow of gradient. LSTM uses a gated exponential smoothing function on the hidden representation to assign credit more effectively. In contrast, we propose to exponentially smooth the outputs (value functions) directly rather than the hidden state. This gradient can be estimated using backpropagation through time by recursively applying the chain rule where:
  \begin{equation}
 \label{grad_rvf}
-\nabla_{\theta} \vr (s_t) = \param_{\omega}(s_t) \nabla_{\theta} \V(s_t) + (1-\param_{\omega}(s_t)). \nabla_{\theta} \vr(s_{t-1})
+\nabla_{\theta} \Vrto (s_t) = \param_{\omega}(s_t) \nabla_{\theta} \V(s_t) + (1-\param_{\omega}(s_t)). \nabla_{\theta} \Vrto(s_{t-1})
 \end{equation}
-However, this can become computationally expensive in environments with a large episodic length, such as continual learning. Therefore, we could approximate the gradient $\nabla_{\theta}\vr(s_{t})$ using a recursive \emph{eligibility} trace:.
+However, this can become computationally expensive in environments with a large episodic length, such as continual learning. Therefore, we could approximate the gradient $\nabla_{\theta}\Vrto(s_{t})$ using a recursive \emph{eligibility} trace:.
 \begin{equation}
 \label{trace}
     e_t = \param_{\omega}(s_t) \nabla_{\theta} \V (s_t) + (1-\param_{\omega}(s_t)) e_{t-1}.
 \end{equation}
-
+This induces a bias as the gradient stored in the trace is with respect to the weights that are continuously modified. This bias is of a similar nature to the one encountered in Real Time Recurrent Learning \citep{williams1995gradient} and the online-backward implementation of the lambda-return \citep{sutton1985temporal}. A more in-depth discussion of this bias can be found in \citep{seijen2014true, williams1995gradient}.
 In the following section, we present the asymptotic convergence proof of RVF.
 
 \begin{comment}
@@ -103,30 +102,47 @@ In the following section, we present the asymptotic convergence proof of RVF.
 \end{figure}
 \end{comment}
 
-\subsection*{Asymptotic convergence}
+\subsection{Asymptotic convergence}
 For this analysis, we consider the simplest case: a tabular setting with TD(0) and a fixed set of $\param$. In the tabular setting, each component of $\theta$ and $\omega$ estimates one particular state, allowing us to simplify the notation. In this section, we simplify the notation by dropping $\theta$ and $\omega$ such that $\V(s_t) = V(s_t)$ and $\param_{\omega}(s_t) = \param_t$.
-In the tabular setting, convergence to the fixed point of an operator is usually proven by casting the learning algorithm as a stochastic approximation \cite{tsitsiklis1994asynchronous,borkar2009stochastic,borkar2000ode} of the form:
+In the tabular setting, convergence to the fixed point of an operator is usually proven by casting the learning algorithm as a stochastic approximation \citep{tsitsiklis1994asynchronous,borkar2009stochastic,borkar2000ode} of the form:
 \begin{equation}\label{stoch}
     \theta_{t+1} = \theta_t + \alpha( \T \theta_t  - \theta_t + w(t)), 
 \end{equation}
 where $\T: \mathbb{R^{|\mathbb{S}|}} \rightarrow \mathbb{R^{|\mathbb{S}|}}$ is a contraction operator and $w(t)$ is a noise term. 
-The main idea is to cast the Recurrent Value Function as an asynchronous stochastic approximation \cite{tsitsiklis1994asynchronous} with an additional regularization term. By bounding the magnitude of this term, we show that the operator is a contraction. The algorithm is asynchronous because the eligibility trace only updates certain states at each time step. 
+The main idea is to cast the Recurrent Value Function as an asynchronous stochastic approximation \citep{tsitsiklis1994asynchronous} with an additional regularization term. By bounding the magnitude of this term, we show that the operator is a contraction. The algorithm is asynchronous because the eligibility trace only updates certain states at each time step. 
 
-We consider the stochastic approximation formulation described in Eq. \ref{stoch} with the following operator $\T^{\param}: \mathbb{R^{|\mathbb{S}|}} \rightarrow \mathbb{R^{|\mathbb{S}|}}$ for any $i \leq t$:
+We consider the stochastic approximation formulation described in Eq. \ref{stoch} with the following operator $\regT: \mathbb{R^{|\mathbb{S}|}} \rightarrow \mathbb{R^{|\mathbb{S}|}}$ for any $i \leq t$:
 \begin{equation}
     \T^{\param} V(s_i) = \expect_{\pol}[r_t + \gamma V(s_{t+1}) + \Delta_t(s_i)]
 \end{equation}
-for all states $s_i$ with $\param_i \in (0,1]$. $\Delta_t(s_i)$ can be interpreted as a regularization term composed of the difference between $V(s_i)$ and $V^{\param}(s_t)$. \\
+for all states $s_i$ with $\param_i \in (0,1]$. $\Delta_t(s_i)$ can be interpreted as a regularization term composed of the difference between $V(s_i)$ and $\Vr(s_t)$. \\
 To obtain this operator we first examine the update to $V(s_i)$ made during the trajectory at time step $t$:
 \begin{equation}
 \label{decompose}
 \begin{split}
-    V(s_i) &= V(s_i) + \alpha e_t(s_i) ( r_t + \gamma V(s_{t+1}) - V^{\param}(s_t)) \\
+    V(s_i) &= V(s_i) + \alpha e_t(s_i) ( r_t + \gamma V(s_{t+1}) - \Vr(s_t)) \\
     &= V(s_i) + \alpha e_t(s_i) ( r_t + \gamma V(s_{t+1}) + \Delta_t(s_i) - V(s_i))
 \end{split}
 \end{equation}
 where $\Delta_t(s_i) = (1-C_t(s_i))(V(s_i) - \widetilde{V}_t(s_i) )$ and  $C_t(s_i) = \param_i \prod_{p=i+1}^t (1-\param_p)$.
-$\widetilde{V}_t(s_t)$ is a convex combination of all $V$ encountered in the trajectory, with the exception of $V(s_i)$, weighted by their respective contribution($\param$) to the estimate $V^{\param}(s_t)$. For example, if we consider updating $V(s_2)$ at $t=3$ and have the following $\param_1 = 0.9,\param_2 = 0.1,\param_3 = 0.1$, the value of $\widetilde{V}_3(s_2)$ will be mainly composed of $V(s_1)$. The main component of the error will be $r_t + \gamma V(s_4) - V(s_1)$. An example on how to obtain this decomposition can be found in the section \ref{decompose_app} of Appendix. 
+$\widetilde{V}_t(s_t)$ is a convex combination of all $V$ encountered in the trajectory, with the exception of $V(s_i)$, weighted by their respective contribution($\param$) to the estimate $\Vr(s_t)$. For example, if we consider updating $V(s_2)$ at $t=3$ and have the following $\param_1 = 0.9,\param_2 = 0.1,\param_3 = 0.1$, the value of $\widetilde{V}_3(s_2)$ will be mainly composed of $V(s_1)$. The main component of the error will be $r_t + \gamma V(s_4) - V(s_1)$. 
+We take an example with $t=3$ and consider $i=2$:
+\begin{equation}
+    \begin{split}
+        \vr(s_3) &= \param_3 \V(s_3) + (1-\param_3)\param_2 \V(s_2) + (1-\param_3)(1-\param_2)  \V(s_1)\\
+        &= \V(s_2) - (1-(1-\param_3)\param_2)(\V(s_2) - \frac{\param_3 \V(s_3) + (1-\param_3)(1-\param_2)  \V(s_1)}{(1-(1-\param_3)\param_2)})\\
+        &= \V(s_2) - (1-(1-\param_3)\param_2)(\V(s_2) - \widetilde{V}_t(s_i))
+    \end{split}
+\end{equation}
+To see that $\widetilde{V}$ is a convex combination of the all the $\V$ encountered along the trajectory weight by $\param$ except $V(s_2)$ it suffices to see that:
+\begin{equation}
+    \begin{split}
+        & \frac{\param_3  + (1-\param_3)(1-\param_2)  }{(1-(1-\param_3)\param_2)} = 1 \\
+        &\equiv \param_3  + (1-\param_3)(1-\param_2)  = (1-(1-\param_3)\param_2) \\
+        &\equiv \param_3 + (1-\param_3)\param_2 + (1-\param_3)(1-\param_2) = 1
+    \end{split}
+\end{equation}
+where the last line is true because $\param \in (0,1]$
 In practice, one can observe an increase in the magnitude of this term with a decrease in \emph{eligibility}. This suggests that the biased updates contribute less to the learning. Bounding the magnitude of $\Delta$ to ensure contraction is the key concept used in this paper to ensure asymptotic convergence.
 
 We consider the following assumptions to prove convergence:
@@ -145,171 +161,26 @@ We define $R_{\max}$ and $R_{\min}$ as the maximum and minimum reward in an MDP.
 \end{equation}
 where $D \in (0.5,1]$ is a constant to be defined based on $\gamma$.
 \end{assumption}
-In theory, scaling the reward is reasonable as it does not change the optimal solution of the MDP \cite{van2016learning}. In practice, however, this may be constraining as the range of the reward may not be known beforehand. This assumption could be relaxed by considering the trajectory's information to bound $\Delta$. As an example, one could consider any physical system where transitions in the state space are smooth (continuous state space) and bounded by some Lipschitz constant in a similar manner than \cite{shah2018q}. 
+In theory, scaling the reward is reasonable as it does not change the optimal solution of the MDP \citep{van2016learning}. In practice, however, this may be constraining as the range of the reward may not be known beforehand. This assumption could be relaxed by considering the trajectory's information to bound $\Delta$. As an example, one could consider any physical system where transitions in the state space are smooth (continuous state space) and bounded by some Lipschitz constant in a similar manner than \citep{shah2018q}. 
 
 As mentioned earlier, the key component of the proof is to control the magnitude of the term in Eq. \ref{decompose}: 
 $\Delta_t(s_i) = (1-C_t(s_i))(V(s_i) - \widetilde{V}_t(s_i))$. As the eligibility of this update gets smaller, the magnitude of the term gets bigger. This suggests that not updating certain states whose eligibility is less than the threshold \emph{C} can help mitigate biased updates.
 Depending on the values of $\gamma$ and $D$, we may need to set a threshold $C$ to guarantee convergence.
 \begin{theorem}
 \label{contraction_theorem}
-Define $V_{\max} = \frac{\widetilde{R}_{\max}}{1-(\gamma+(1-D))}$ and $V_{\min} = \frac{R_{\min}}{1-(\gamma-(1-D))}$. $\T^{\param}: X \rightarrow X$ is a contraction operator if the following holds:
+Define $V_{\max} = \frac{\widetilde{R}_{\max}}{1-(\gamma+(1-D))}$ and $V_{\min} = \frac{R_{\min}}{1-(\gamma-(1-D))}$. $\regT: X \rightarrow X$ is a contraction operator if the following holds:
 \begin{itemize}
     \item Let $X$ be the set of $V$ functions such that $\forall s \in \mathbb{S} \quad  V_{\min} \leq V(s) \leq V_{\max}$.  The functions $V$ are initialized in $X$.
     \item For a given $D$ and $\gamma$ we select $C$ such that $\Delta \leq (1-C)(V_{\max}-V_{\min}) \leq (1-D)V_{\min}$.
 \end{itemize}
 \end{theorem}
-We outline important details of the proof here. A full version can be found in Appendix \ref{proof}. For two sets of value functions $U,V \in X$:
-\begin{equation}
-    \max_{s}\expect_{\pol}[ \Delta^V(s) -  \Delta^U(s))] \leq \max_{s}\expect_{\pol}[(1-D)(V(s)-U(s))],\\
-\end{equation}
-where $\Delta^U$ is the $\Delta$ described in Eq. \ref{decompose} with value function $U$. For any $\gamma$ contraction operator, we can now guarantee that $\T^{\param}$ is a $\gamma + (1-D)$ contraction operator, where $\gamma + (1-D) < 1$ holds from Assumption \ref{assumption_rew}. We provide an example in Appendix \ref{set_gamma} to set $C$ based on $\gamma$ and $D$.
-We can guarantee that $\V$ converges to a fixed point of the operator $\T^{\param}$ with probability $=1$ using Theorem 3 of \cite{tsitsiklis1994asynchronous}. The assumptions of Theorem 3 of \cite{tsitsiklis1994asynchronous} are discussed in section \ref{assumption} of Appendix.
-
-% Function Approx Stuff. Commenting it out now.
-%EXPLAIN HERE JUMPY N-STEP RETURN USING THE EXAMPLE\\
-%\subsection{Adjusting for the reward}
-
-\section{Related work}
-
-One important similarity of RVFs is with respect to the online implementation of $\lambda$ return \cite{sutton1998reinforcement,dayan1992convergence}. Both RVF and online $\lambda$ returns have an eligibility trace form, but the difference is in RVF's capacity to ignore a state based on $\param$. In this paper we argue that this can provide more robustness to noise and partial observability.  The ability of RVF to emphasize a state is similar to the interest function in emphatic TD \cite{mahmood2015emphatic}, however, learning a state-dependant interest function and $\lambda$ remains an open problem. In contrast, RVF has a natural way of learning $\param$ by comparing the past and the future. The capacity to ignore states shares some motivations to semi-Markov decision process \cite{puterman1990markov}. Learning $\param$ and ignoring states can be interpreted as learning temporal abstraction over the trajectory in policy evaluation.
-In reward shaping literature, several works such as Temporal Value Transport \cite{TVT}, Temporal Regularization \cite{thodoroff2018temporal}, Natural Value Approximator \cite{xu2017natural} attempt to modify the target to either enforce temporal consistency or to assign credit efficiently. This departs from our formulation as we consider estimating a value function directly by using the previous estimates rather than by  modifying the target. As a result of modifying the estimate, RVFs can choose to ignore a gradient while updating, which is not possible in other works. For example, in settings where the capacity is limited, updating on noisy states can be detrimental for learning.
-Finally, RVF can also be considered as a partially observable method \cite{kaelbling1998planning}. However, it differs significantly from the literature as it does not attempt to infer the underlying hidden state explicitly, but rather only decides if the past estimates align with the target. We argue that inferring an underlying state may be significantly harder than learning to ignore or emphasize a state based on its value. This is illustrated in the next section.
-
-\section{Experiments}
-In this section, we perform experiments on various tasks to demonstrate the effectiveness of RVF.
-First, we explore RVF robustness to partial observability on a synthetic domain. We then showcase RVF's robustness to noise on several complex continuous control tasks from the Mujoco suite \cite{todorov2012mujoco}. An example of policy evaluation is also provided in Appendix \ref{Policy_evaluation_RVF} as a reading.
-\subsection{Partially observable multi-chain domain}
-We consider the simple chain MDP described in Figure \ref{fig:toy MDP}. This MDP has three chains connected together to form a \emph{Y}. Each of the three chains (left of $S_1$, right of $S_2$, right of $S_3$) is made up of a sequence of states. The agent starts at $S_0$ and navigates through the chain. At the intersection $S_1$, there is a $0.5$ probability to go up or down. The chain on top receives a reward of $+1$ while the one at the bottom receives a reward of $-1$. Every other transition has a reward of $0$, unless specified otherwise.
-\begin{figure}[h]
-\centering
-    \includegraphics[width=0.9\textwidth,height=3.5cm]{fig/toy_MDP.png}
-    \caption{Simple chain MDP.}
-    \label{fig:toy MDP}
-\end{figure}
-\begin{figure}[b]
-    \centering
-    \includegraphics[width=0.95\textwidth,height=3.75cm]{fig/POMDP.pdf}
-    \caption{Results on the aliased Y-chain.}
-    \label{fig:pomdp}
-\end{figure}
-(a) Simple chain MDP: The agent starts at state $S_0$ and navigates along the chain. States $S_4$ and $S_5$ are aliased. (b) Results on the aliased Y-chain on various methods, such as TD$(0)$, TD($\lambda$), GRU, RTD($0$), and Optimal RTD($0$) (O-RTD(0)) averaged over 20 random seeds.
-We explore the capacity of recurrent learning to solve a partially observable task in the \emph{Y} chain. In particular, we consider the case where some states are aliased (share a common representation). The representation of the states $S_4$ and $S_5$ in Figure \ref{fig:toy MDP} are aliased. The goal of this environment is to correctly estimate the value of the aliased state $V^{\pol}(S_4)=0.9,V^{\pol}(S_5)=-0.9$ (due to the discount factor(0.9) and the length of each chain being 3). When TD methods such as TD($0$) or TD($\lambda$) are used, the values of the aliased states $S_4$ and $S_5$ are close to $0$ as the reward at the end of the chain is $+1$ and $-1$.  However, when learning $\param$ (emphasis function $\param$ is modelled using a sigmoid function), Recurrent Value Functions achieve almost no error in their estimate of the aliased states as illustrated in Figure \ref{fig:pomdp}. This can be explained by observing that $\param \rightarrow 0$ on the aliased state due to the fact that the previous values along the trajectory are better estimates of the future than those of the aliased state. As $\param \to 0$, $\vr(S_4)$ and $\vr(S_5)$ tend to rely on their more accurate previous estimates, $\vr(S_2)$ and $\vr(S_3)$. We see that learning to ignore certain states can at times be sufficient to solve an aliased task. We also compare with a recurrent version (O-RTD) where optimal values of $\param$ are used. In this setting,  $\param(S_1)=\param(S_2) = \param(s_3) = 1 $ and other states have $\param = 0$. Another interesting observation is with respect to Recurrent Neural Networks. RNNs are known to solve tasks which have partial observability by inferring the underlying state. LSTM and GRU have many parameters that are used to infer the hidden state. Correctly learning to keep the hidden state intact can be sample-inefficient. In comparison, $\param$ can estimate whether or not to put emphasis (confidence) on a state value using a single parameter. This is illustrated in Figure \ref{fig:pomdp} where RNNs take 10 times more episodes to learn the optimal value when compared to RVF. This illustrates a case where learning to ignore a state is easier than inferring its hidden representation. The results displayed in Figure \ref{fig:pomdp} are averaged over 20 random seeds. For every method, a hyperparameter search is done to obtain their optimal value. These can be found in Appendix \ref{hyper_toy}. We noticed that the emphasis function is easier to learn if the horizon of the target is longer, since a longer horizon provides a better prediction of the future. To account for this, we use $\lambda$-return as a target.
-\subsection{Deep Reinforcement Learning}
-Next, we test RVF on several environments of the Mujoco suite \cite{todorov2012mujoco}. We also evaluate the robustness of different algorithms by adding $\epsilon$ sensor noise (drawn from a normal distribution $\epsilon \sim N(0,1)$) to the observations as presented in \cite{zhang2018dissection}.
-We modify the critic of A2C \cite{wu2017scalable} (R-A2C) and Proximal Policy Optimization (R-PPO) \cite{schulman2017proximal} to estimate the recurrent value function parametrized by $\theta$. We parametrize $\param$ using a seperate network with the same architecture as the value function (parametrized by $\omega$). We minimize the loss mentioned in Eq. \ref{loss_beta} but replace the target with generalized advantage function ($\V^{\lambda}$) \cite{schulman2015high} for PPO and TD($n$) for A2C. Using an automatic differentiation library (Pytorch \cite{paszke2017automatic}), we differentiate the loss through the modified estimate to learn $\theta$ and $\omega$. The default optimal hyperparameters of PPO and A2C are used. Due to the batch nature of PPO, obtaining the trajectory information to create the computational graph can be costly. In this regard, we cut the backpropagation after $N$ timesteps in a similar manner to truncated backpropagation through time. The number of backpropagation steps is obtained using hyperparameter search. Details can be found in Appendix \ref{deep_RL_appendix}. We use a truncated backprop of $N=5$ in our experiments as we found no empirical improvements for $N=10$. For a fairer comparison in the noisy case, we also compare the performance of two versions of PPO with an LSTM. The first version processes one trajectory every update. The second uses a buffer in a similar manner to PPO, but the gradient is cut after 5 steps as the computation overhead from building the graph every time is too large. The performance reported is averaged over 20 different random seeds with a confidence interval of $68\%$ displayed \footnote{The base code used to develop this algorithm can be found here \cite{pytorchrl}. The code for Recurrent PPO can be found in the supplementary material.}
-\subsubsection{Performance}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth,height=6.9cm]{./fig/perf_mujoco.pdf}
-    \caption{Performance on Mujoco tasks. Results on the first row are generated without noise  and on the second row by inducing a Gaussian noise ($\epsilon \sim \mathbb{N}(0,0.1)$) in the sensor inputs.}
-    \label{fig:perf_mujoco_final}
-\end{figure}
-As demonstrated in Figure \ref{fig:perf_mujoco_final}, we observe a marginal increase in performance on several tasks such as Swimmer, Walker, Hopper, Half Cheetah and Double Inverted Pendulum in the fully observable setting. However, severe drops in performance were observed in the vanilla PPO when we induced partial observability by introducing a Gaussian noise to the observations. On the other hand, R-PPO (PPO with RVF) was found to be robust to the noise, achieving significantly higher performance in all the tasks considered. In both cases, R-PPO outperforms the partially observable models (LSTM). The mean and standard deviation of the emphasis function for both noiseless and noisy versions can be found in Appendix(\ref{fig:beta_mean}, \ref{fig:beta_std}). At the same time, A2C performance on both vanilla and recurrent versions (referred as R-A2C) were found to be poor. We increased the training steps on both versions and noticed the same observations as mentioned above once A2C started to learn the task. The performance plots, along with the mean and standard deviation of the emphasis function during training, can be found in Appendix (\ref{fig:a2c_no_noise_full}, \ref{fig:a2c_noise_full}, \ref{fig:beta_mean_a2c_mujoco},  \ref{fig:beta_std_a2c_mujoco}).
-\begin{comment}
-The algorithm was tested on several games of the Mujoco suite \cite{todorov2012mujoco}. As demonstrated in Figure \ref{fig:perf_mujoco}, we observe an increase in performance on several tasks such as Swimmer, Hopper, Inverted Pendulum, Double Inverted Pendulum and HalfCheetah. The performances are averaged over 20 seeds and a confidence interval of $95\%$ is used. For the other tasks (Half Cheetah, Walker) the performances were found to be comparable. The performance graphs for all the games can be found in Figure \ref{fig:full_mujoco} in Appendix. The mean beta values and variance for all the tasks can also be found in Appendix (Figure \ref{fig:beta_mean},\ref{fig:beta_std}).
-\end{comment}
-\subsubsection{Qualitative interpretation of the emphasis function $\param$ }
-\emph{Hopper}: At the end of training, we can qualitatively analyze the emphasis function ($\param$) through the trajectory. We observe cyclical behaviour shown in Figure \ref{fig:cyle_hopper}, where different colours describe various stages of the cycle. The emphasis function learned to identify \emph{important states} and to ignore the others. One intuitive way to look at the emphasis function($\param$) is: \emph{If I were to give a different value to a state, would that alter my policy significantly?} We observe an increase in the value of the emphasis function ($\param$) when the agent must make an important decision, such as jumping or landing. We see a decrease in the value of the emphasis function ($\param$) when the agent must perform a trivial action. This pattern is illustrated in Figure \ref{fig:visual_hopper} and \ref{fig:cyle_hopper}. This behaviour is cyclic and repetitive, a video of which can be found in the following link\footnote{\url{https://youtu.be/0bzEcrxNwRw}{}}.
-\begin{figure}[h]
-\centering
-    \centering
-    \begin{minipage}[b]{0.4\linewidth}
-    \centering
-    \includegraphics[width=\textwidth,height=1.9cm]{fig/phase_0.png}
-    Phase 1: high $\param$
-    \label{fig:phase_0}
-    \end{minipage}
-    \hspace{0.05cm}
-    \begin{minipage}[b]{0.4\linewidth}
-    \centering
-    \includegraphics[width=\textwidth,height=1.9cm]{fig/phase_1.png}
-    Phase 2: low $\param$
-    \label{fig:phase_1}
-    \end{minipage}
-    \hspace{0.02cm}
-    \begin{minipage}[b]{0.4\linewidth}
-    \centering
-    \includegraphics[width=\textwidth,height=1.9cm]{fig/phase_2.png}
-    Phase 3: high $\param$
-    \label{fig:phase_2}
-    \end{minipage}
-    \vspace{0.02cm}
-    \hspace{0.02cm}
-    \begin{minipage}[b]{0.4\linewidth}
-    \centering
-    \includegraphics[width=\textwidth,height=1.9cm]{fig/phase_3.png}
-     Phase 4: low $\param$
-    \label{fig:phase_3}
-    \end{minipage}
-    \hspace{0.02cm}
-    \caption{Cyclical behaviour of $\param$ on Hopper.}
-    \label{fig:visual_hopper}
-\end{figure}
-\begin{figure}
-    \centering
-    \includegraphics[width=\textwidth,height=4.7cm]{fig/beta_hopper.pdf}
-    \caption{Behaviour of $\param$ through the trajectory.}
-    \label{fig:cyle_hopper}
-\end{figure}
-(a) The emphasis function learns to emphasize key states in the environment. The emphasis function is high when the agent is making important decisions, such as landing or taking off (Phase 1 and Phase 3). The emphasis function is low when the agent is making decisions while it is in the air (Phase 2 and Phase 4). (b) Behaviour of the emphasis function along the trajectory for various phases described in (a) for one period. The emphasis function keeps repeating the behaviour.
-\section{Discussions and Future Work}
-\paragraph{Temporal Credit assignment:} As mentioned earlier, we can control the flow of gradient by using emphasis function $\param_{\omega}(s_t)$ and pass gradient to the states that contributed to the reward but are located several time-steps earlier. We could potentially do credit assignment on states that are temporally far away by forcing the emphasis function between these states to be close to $0$. This setting could be useful in problems with long horizons, such as lifelong learning and continual learning.
-\begin{comment}
-This induces a bias as the gradient stored in the trace is with respect to the weights that are continuously modified. This bias is of a similar nature to the one encountered in Real Time Recurrent Learning \cite{williams1995gradient} and the online-backward implementation of the lambda-return \cite{sutton1985temporal}. A more in-depth discussion of this bias can be found in \cite{seijen2014true, williams1995gradient}.
-\end{comment}
-\paragraph{$\param$ as an interest function:}  In Reinforcement Learning, having access to a function quantifying the \emph{interest} \cite{mahmood2015emphatic} of a state can be helpful. For example, one could decide to explore from those states, prioritize experience replay based on those states, and use $\param$ to set the $\lambda$ to bootstrap from interesting states. Indeed, bootstrapping on states with a similar value (low $\param$) than the one estimated will only result in variance. The most informative updates come from bootstrapping on states with different values (high $\param$). We also believe $\param$ to be related to the concepts of bottleneck states \cite{tishby2011information} and reversibility.
-\paragraph{Partially observable domain: } As demonstrated earlier, RVFs are able to correctly estimate the value of an aliased/noisy state using the trajectory's estimate. We believe that this is a promising area to explore because, as the experiments suggest, ignoring an uninformative state can sometimes suffice to learn its value function. This is in contrast to traditional POMDP methods which attempt to infer the belief state. Smoothing the output with a gating mechanism could also be useful for sequential tasks in Supervised Learning, such as regression or classification. 
-\paragraph{Adjusting for the reward:} In practice, some environments in Reinforcement Learning have
-a constant reward at every time step, potentially inducing bias in $\vr$ estimates. It would be possible to modify the RVF formulation to account for the reward that was just seen, such that $\vr(s_t) = \param V(s_t) + (1-\param) (\vr(s_{t-1}) - r_{t-1})$.
-Whether or not subtracting the reward can reduce the bias will depend on the environment considered.
-\paragraph{Conclusion:} In this work we propose Recurrent Value Functions to address variance issues in Model-free Reinforcement Learning. First, we prove the asymptotic convergence of the proposed method. We then demonstrate the robustness of RVF to noise and partial observability in a synthetic example and on several tasks from the Mujoco suite. Finally, we describe the behaviour of the emphasis function qualitatively.
-
-\subsection{Convergence Proof}
-TD(0) is known to converge to the fixed point of the bellman operator \cite{sutton1988learning}:
-\begin{equation}
-\begin{split}
-    \T \V(s_t) &= \expect_{s_{t+1} \sim \pol} [r(s_t) + \gamma \V(s_{t+1})]\\
-\end{split}
-\end{equation}
-However, in practice we have access to a noisy version of the operator $\widetilde{\T}$ due to sampling process hence the noise term $w(t)$:
-\begin{equation}
-    w(t) = r_t + \gamma \V (s_{t+1}) - \expect_{s_{t+1} \sim \pol} [r + \gamma \V(s_{t+1})]
-\end{equation}
-\subsubsection{Derivation of $\widetilde{\V}$, Eq. \ref{decompose}}\label{decompose_app}
-We take an example with $t=3$ and consider $i=2$:
-\begin{equation}
-    \begin{split}
-        \vr(s_3) &= \param_3 \V(s_3) + (1-\param_3)\param_2 \V(s_2) + (1-\param_3)(1-\param_2)  \V(s_1)\\
-        &= \V(s_2) - (1-(1-\param_3)\param_2)(\V(s_2) - \frac{\param_3 \V(s_3) + (1-\param_3)(1-\param_2)  \V(s_1)}{(1-(1-\param_3)\param_2)})\\
-        &= \V(s_2) - (1-(1-\param_3)\param_2)(\V(s_2) - \widetilde{V}_t(s_i))
-    \end{split}
-\end{equation}
-To see that $\widetilde{V}$ is a convex combination of the all the $\V$ encountered along the trajectory weight by $\param$ except $V(s_2)$ it suffices to see that:
-\begin{equation}
-    \begin{split}
-        & \frac{\param_3  + (1-\param_3)(1-\param_2)  }{(1-(1-\param_3)\param_2)} = 1 \\
-        &\equiv \param_3  + (1-\param_3)(1-\param_2)  = (1-(1-\param_3)\param_2) \\
-        &\equiv \param_3 + (1-\param_3)\param_2 + (1-\param_3)(1-\param_2) = 1
-    \end{split}
-\end{equation}
-where the last line is true because $\param \in (0,1]$
-\subsubsection{Proof theorem 1}\label{proof}
-\setcounter{theorem}{0}
-\begin{theorem}
-Let's define $V_{\max} = \frac{\widetilde{R}_{\max}}{1-(\gamma+(1-D))}$ and $V_{\min} = \frac{R_{\min}}{1-(\gamma-(1-D))}$. If the following holds
-\begin{itemize}
-    \item Let $X$ be the set of $\V$ functions such that $\forall s \in \mathbb{S} \quad  V_{\min} \leq \V(s) \leq V_{\max}$. We assume the functions are initialized in $X$.
-    \item For a given $D$ and $\gamma$ we select C such that $(1-C)(V_{\max}-V_{\min}) \leq (1-D)V_{\min}$
-\end{itemize}
-then $\T^{\param}: X \rightarrow X$ is a contractive operator.
-\end{theorem}
 \begin{proof}
-The first step is to prove that $\T^{\param}$ maps to itself for any noisy update $\widetilde{\T^{\param}}$. 
+The first step is to prove that $\regT$ maps to itself for any noisy update $\widetilde{\T^{\param}}$. 
 From 2) we know that
 $(1-C) (V_{\max} - V_{\min}) < D V_{\min} \leq D V_{\max}$ we can then deduce that
 \begin{equation}
     \begin{split}
-        \widetilde{\T^{\param}}\V(s) &\leq \widetilde{R}_{\max} + \gamma V_{\max} +(1-C)(V_{\max} - V_{\min}) \\
+        \widetilde{\regT}\V(s) &\leq \widetilde{R}_{\max} + \gamma V_{\max} +(1-C)(V_{\max} - V_{\min}) \\
         &\leq \widetilde{R}_{\max} + (\gamma+(1-D)) V_{\max} \\
         &\leq V_{\max}
     \end{split}
@@ -317,15 +188,15 @@ $(1-C) (V_{\max} - V_{\min}) < D V_{\min} \leq D V_{\max}$ we can then deduce th
 and
 \begin{equation}
     \begin{split}
-        \widetilde{\T}^{\param}\V(s) &\geq R_{\min} + \gamma V_{\min} + (1-C)(V_{\min} - V_{\max})\\
+        \widetilde{\regT}\V(s) &\geq R_{\min} + \gamma V_{\min} + (1-C)(V_{\min} - V_{\max})\\
         &\geq R_{\min} + (\gamma-(1-D)) V_{\min}\\
         &\geq V_{min}\\
     \end{split}
 \end{equation}
-The next step is to show that $\T^{\param}$ is a contractive operator:
+The next step is to show that $\regT$ is a contractive operator:
 \begin{equation}
 \begin{split}
-    &\norm{\T^{\param}V - \T^{\param}U}_{\infty}\\
+    &\norm{\regT V - \T^{\param}U}_{\infty}\\
     &\leq \max_{s,s'}\expect_{\pol}[\gamma V(s) + \Delta^V(s') - (\gamma U(s) + \Delta^U(s'))] \\
     &\leq \max_{s,s'}\expect_{\pol}[\gamma (V(s)-U(s)) + (1-D)(V(s') -U(s'))]\\
     &\leq \max_{s}\expect_{\pol}[((1-D)+\gamma)(V(s) - U(s))]\\
@@ -334,7 +205,19 @@ The next step is to show that $\T^{\param}$ is a contractive operator:
 \end{equation}
 and from the assumption we know that $(1-D)+\gamma < 1$.
 \end{proof}
-\subsubsection{Selecting C}\label{set_gamma}
+We can guarantee that $\V$ converges to a fixed point of the operator $\T^{\param}$ with probability $=1$ using Theorem 3 of \citep{tsitsiklis1994asynchronous}. We now discuss the assumptions of theorem 3 in \citep{tsitsiklis1994asynchronous} 
+\paragraph{Assumption 1:} Allows for delayed update that can happen in distributed system for example. In this algorithm all $\V$'s are updated at each time step $t$ and is not an issue here.
+\paragraph{Assumption 2: } As described by \citep{tsitsiklis1994asynchronous} assumption 2 ``allows for the possibility of deciding whether to update a particular component $x_i$ at time $t$, based on the past history of the process.''. This assumption is defined to accommodate for $\epsilon$-greedy exploration in Q-learning. In this paper we only consider policy evaluation hence this assumptions holds.
+\paragraph{ Assumption 3:} The learning rate of each state $s \in \mathbb{S}$ must satisfy Robbins Monroe conditions such that there exists $C \in \mathbb{R}$:
+\begin{equation}
+    \begin{split}
+        \sum_{i=0}^{\infty} \alpha_t(s) 
+e_t(s) &= \infty \quad \text{w.p.1}\\
+        \sum_{i=0}^{\infty} (\alpha_t(s) e_t(s))^2 &\leq C      \end{split}
+\end{equation}
+This can be verified by assuming that each state gets visited infinitely often and an appropriate decaying learning rate based on $\#_s$ (state visitation count) is used (linear for example). 
+\paragraph{Assumption 5:} This assumption requires $\T$ to be a contraction operator. This has been proven in theorem 1 of this paper.
+
 To select C based on $\gamma$ and $D$ it suffice to solve analytically for:
 \begin{equation}
 \begin{split}
@@ -351,19 +234,124 @@ which is satisfied only if:
 \end{split}
 \end{equation}
 As an example for $D = 0.8$ and $\gamma = 0.5$ any $C\geq 0.33$ satisfies this inequality.
-\subsubsection{Assumption asynchronous stochastic approximation}\label{assumption}
-We now discuss the assumptions of theorem 3 in \cite{tsitsiklis1994asynchronous} 
-\paragraph{Assumption 1:} Allows for delayed update that can happen in distributed system for example. In this algorithm all $\V$'s are updated at each time step $t$ and is not an issue here.
-\paragraph{Assumption 2: } As described by \cite{tsitsiklis1994asynchronous} assumption 2 ``allows for the possibility of deciding whether to update a particular component $x_i$ at time $t$, based on the past history of the process.''. This assumption is defined to accommodate for $\epsilon$-greedy exploration in Q-learning. In this paper we only consider policy evaluation hence this assumptions holds.
-\paragraph{ Assumption 3:} The learning rate of each state $s \in \mathbb{S}$ must satisfy Robbins Monroe conditions such that there exists $C \in \mathbb{R}$:
-\begin{equation}
-    \begin{split}
-        \sum_{i=0}^{\infty} \alpha_t(s) 
-e_t(s) &= \infty \quad \text{w.p.1}\\
-        \sum_{i=0}^{\infty} (\alpha_t(s) e_t(s))^2 &\leq C      \end{split}
-\end{equation}
-This can be verified by assuming that each state gets visited infinitely often and an appropriate decaying learning rate based on $\#_s$ (state visitation count) is used (linear for example). 
-\paragraph{Assumption 5:} This assumption requires $\T$ to be a contraction operator. This has been proven in theorem 1 of this paper.
+
+% Function Approx Stuff. Commenting it out now.
+%EXPLAIN HERE JUMPY N-STEP RETURN USING THE EXAMPLE\\
+%\subsection{Adjusting for the reward}
+
+\section{Related work}
+
+One important similarity of RVFs is with respect to the online implementation of $\lambda$ return \citep{sutton1998reinforcement,dayan1992convergence}. Both RVF and online $\lambda$ returns have an eligibility trace form, but the difference is in RVF's capacity to ignore a state based on $\param$. In this paper we argue that this can provide more robustness to noise and partial observability.  The ability of RVF to emphasize a state is similar to the interest function in emphatic TD \citep{mahmood2015emphatic}, however, learning a state-dependant interest function and $\lambda$ remains an open problem. In contrast, RVF has a natural way of learning $\param$ by comparing the past and the future. The capacity to ignore states shares some motivations to semi-Markov decision process \citep{puterman1990markov}. Learning $\param$ and ignoring states can be interpreted as learning temporal abstraction over the trajectory in policy evaluation.
+In reward shaping literature, several works such as Temporal Value Transport \citep{TVT}, Temporal Regularization \citep{thodoroff2018temporal}, Natural Value Approximator \citep{xu2017natural} attempt to modify the target to either enforce temporal consistency or to assign credit efficiently. This departs from our formulation as we consider estimating a value function directly by using the previous estimates rather than by  modifying the target. As a result of modifying the estimate, RVFs can choose to ignore a gradient while updating, which is not possible in other works. For example, in settings where the capacity is limited, updating on noisy states can be detrimental for learning.
+Finally, RVF can also be considered as a partially observable method \citep{kaelbling1998planning}. However, it differs significantly from the literature as it does not attempt to infer the underlying hidden state explicitly, but rather only decides if the past estimates align with the target. We argue that inferring an underlying state may be significantly harder than learning to ignore or emphasize a state based on its value. This is illustrated in the next section.
+
+\section{Experiments}
+In this section, we perform experiments on various tasks to demonstrate the effectiveness of RVF.
+First, we explore RVF robustness to partial observability on a synthetic domain. We then showcase RVF's robustness to noise on several complex continuous control tasks from the Mujoco suite \citep{todorov2012mujoco}. \subsection{Partially observable multi-chain domain}
+We consider the simple chain MDP described in Figure \ref{fig:toy MDP}. This MDP has three chains connected together to form a \emph{Y}. Each of the three chains (left of $S_1$, right of $S_2$, right of $S_3$) is made up of a sequence of states. The agent starts at $S_0$ and navigates through the chain. At the intersection $S_1$, there is a $0.5$ probability to go up or down. The chain on top receives a reward of $+1$ while the one at the bottom receives a reward of $-1$. Every other transition has a reward of $0$, unless specified otherwise.
+\begin{figure}[h]
+	\centering
+    \includegraphics[scale=0.8]{fig/toy_MDP.png}
+    \caption[Y-chain]{Simple chain MDP.}
+    \label{fig:toy MDP}
+\end{figure}
+
+
+(a) Simple chain MDP: The agent starts at state $S_0$ and navigates along the chain. States $S_4$ and $S_5$ are aliased. (b) Results on the aliased Y-chain on various methods, such as TD$(0)$, TD($\lambda$), GRU, RTD($0$), and Optimal RTD($0$) (O-RTD(0)) averaged over 20 random seeds.
+We explore the capacity of recurrent learning to solve a partially observable task in the \emph{Y} chain. In particular, we consider the case where some states are aliased (share a common representation). The representation of the states $S_4$ and $S_5$ in Figure \ref{fig:toy MDP} are aliased. The goal of this environment is to correctly estimate the value of the aliased state $V^{\pol}(S_4)=0.9,V^{\pol}(S_5)=-0.9$ (due to the discount factor(0.9) and the length of each chain being 3). When TD methods such as TD($0$) or TD($\lambda$) are used, the values of the aliased states $S_4$ and $S_5$ are close to $0$ as the reward at the end of the chain is $+1$ and $-1$.  However, when learning $\param$ (emphasis function $\param$ is modelled using a sigmoid function), Recurrent Value Functions achieve almost no error in their estimate of the aliased states as illustrated in Figure \ref{fig:pomdp}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.6]{fig/POMDP.pdf}
+    \caption[Y-chain performance]{Results on the aliased Y-chain.}
+    \label{fig:pomdp}
+\end{figure}
+
+ This can be explained by observing that $\param \rightarrow 0$ on the aliased state due to the fact that the previous values along the trajectory are better estimates of the future than those of the aliased state. As $\param \to 0$, $\vr(S_4)$ and $\vr(S_5)$ tend to rely on their more accurate previous estimates, $\vr(S_2)$ and $\vr(S_3)$. We see that learning to ignore certain states can at times be sufficient to solve an aliased task. We also compare with a recurrent version (O-RTD) where optimal values of $\param$ are used. In this setting,  $\param(S_1)=\param(S_2) = \param(s_3) = 1 $ and other states have $\param = 0$. Another interesting observation is with respect to Recurrent Neural Networks. RNNs are known to solve tasks which have partial observability by inferring the underlying state. LSTM and GRU have many parameters that are used to infer the hidden state. Correctly learning to keep the hidden state intact can be sample-inefficient. In comparison, $\param$ can estimate whether or not to put emphasis (confidence) on a state value using a single parameter. This is illustrated in Figure \ref{fig:pomdp} where RNNs take 10 times more episodes to learn the optimal value when compared to RVF. This illustrates a case where learning to ignore a state is easier than inferring its hidden representation. The results displayed in Figure \ref{fig:pomdp} are averaged over 20 random seeds.  We noticed that the emphasis function is easier to learn if the horizon of the target is longer, since a longer horizon provides a better prediction of the future. To account for this, we use $\lambda$-return as a target. For every method the learning rate and $\lambda$ was tuned for optimal performance in the range $[0,1]$.\\
+For RTD a learning rate of 0.5 for the value function and 1 for the beta function was found to be optimal with a lambda of 0.9.\\
+For the GRU model we explored different amount of cell($\{1,5,10,15,20,25\}$) to vary the capacity of the model. The optimal number of hidden cell we found is 10, learning rate 0.5 and lambda 0.9. 
+\subsection{Continuous control}
+Next, we test RVF on several environments of the Mujoco suite \citep{todorov2012mujoco}. We also evaluate the robustness of different algorithms by adding $\epsilon$ sensor noise (drawn from a normal distribution $\epsilon \sim N(0,1)$) to the observations as presented in \citep{zhang2018dissection}.
+We modify the critic of A2C \citep{wu2017scalable} (R-A2C) and Proximal Policy Optimization (R-PPO) \citep{schulman2017proximal} to estimate the recurrent value function parametrized by $\theta$. We parametrize $\param$ using a seperate network with the same architecture as the value function (parametrized by $\omega$). We minimize the loss mentioned in Eq. \ref{loss_beta} but replace the target with generalized advantage function ($\V^{\lambda}$) \citep{schulman2015high} for PPO and TD($n$) for A2C. Using an automatic differentiation library (Pytorch \citep{paszke2017automatic}), we differentiate the loss through the modified estimate to learn $\theta$ and $\omega$. The default optimal hyperparameters of PPO and A2C are used. Due to the batch nature of PPO, obtaining the trajectory information to create the computational graph can be costly. In this regard, we cut the backpropagation after $N$ timesteps in a similar manner to truncated backpropagation through time. The number of backpropagation steps is obtained using hyperparameter search. The best hyperparameters were selected on 10 random seeds. 
+\paragraph{PPO:} The following values were considered for the learning rate $\{3E-05,6E-05,9E-05,3E-04,6E-04\}$ and $N = \{2,5,10\}$.  The optimal values for learning rate is the same one obtained in the original PPO paper $3E-4$ and $N=5$.
+We also compare with a larger network for PPO to adjust for the additional parameter of $\param$ the performance of vanilla PPO were found to be similar. In terms of computational cost, RVF introduce a computational overhead slowing down training by a factor of 2 on a CPU(Intel Skylake cores 2.4GHz, AVX512) compared to PPO. The results are reported on 20 new random seeds and a confidence interval of $68\%$ is displayed. 
+
+We use a truncated backprop of $N=5$ in our experiments as we found no empirical improvements for $N=10$. For a fairer comparison in the noisy case, we also compare the performance of two versions of PPO with an LSTM. The first version processes one trajectory every update. The second uses a buffer in a similar manner to PPO, but the gradient is cut after 5 steps as the computation overhead from building the graph every time is too large. The performance reported is averaged over 20 different random seeds with a confidence interval of $68\%$ displayed \footnote{The base code used to develop this algorithm can be found here \citep{pytorchrl}. The code for Recurrent PPO can be found in the supplementary material.}
+\subsubsection{Performance}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=6.9cm]{./fig/perf_mujoco.pdf}
+    \caption[Performance on Mujoco]{Performance on Mujoco tasks. Results on the first row are generated without noise  and on the second row by inducing a Gaussian noise ($\epsilon \sim \mathbb{N}(0,0.1)$) in the sensor inputs.}
+    \label{fig:perf_mujoco_final}
+\end{figure}
+As demonstrated in Figure \ref{fig:perf_mujoco_final}, we observe a marginal increase in performance on several tasks such as Swimmer, Walker, Hopper, Half Cheetah and Double Inverted Pendulum in the fully observable setting. However, severe drops in performance were observed in the vanilla PPO when we induced partial observability by introducing a Gaussian noise to the observations. On the other hand, R-PPO (PPO with RVF) was found to be robust to the noise, achieving significantly higher performance in all the tasks considered. In both cases, R-PPO outperforms the partially observable models (LSTM). The mean and standard deviation of the emphasis function for both noiseless and noisy versions can be found in Appendix(\ref{fig:beta_mean}, \ref{fig:beta_std}). At the same time, A2C performance on both vanilla and recurrent versions (referred as R-A2C) were found to be poor. We increased the training steps on both versions and noticed the same observations as mentioned above once A2C started to learn the task. The  mean and standard deviation of the emphasis function during training, can be found in Fig (\ref{fig:beta_mean},  \ref{fig:beta_std}).
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth, height=4cm]{fig/beta_mean.pdf}
+    \caption{Mean beta values using recurrent PPO on Mujoco domains}
+    \label{fig:beta_mean}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth, height=4cm]{fig/beta_std.pdf}
+    \caption{Standard deviation of beta using recurrent PPO on Mujoco domains}
+    \label{fig:beta_std}
+\end{figure}
+
+\subsubsection{Qualitative interpretation of the emphasis function $\param$ }
+\emph{Hopper}: At the end of training, we can qualitatively analyze the emphasis function ($\param$) through the trajectory. We observe cyclical behaviour shown in Figure \ref{fig:cyle_hopper}, where different colours describe various stages of the cycle. The emphasis function learned to identify \emph{important states} and to ignore the others. One intuitive way to look at the emphasis function($\param$) is: \emph{If I were to give a different value to a state, would that alter my policy significantly?} We observe an increase in the value of the emphasis function ($\param$) when the agent must make an important decision, such as jumping or landing. We see a decrease in the value of the emphasis function ($\param$) when the agent must perform a trivial action. This pattern is illustrated in Figure \ref{fig:visual_hopper} and \ref{fig:cyle_hopper}. This behaviour is cyclic and repetitive, a video of which can be found in the following link\footnote{\url{https://youtu.be/0bzEcrxNwRw}{}}.
+\begin{figure}[h]
+\centering
+    \centering
+    \begin{minipage}[b]{0.23\linewidth}
+    \centering
+    \includegraphics[width=\textwidth,height=2.5cm]{fig/phase_0.png}
+    Phase 1: high $\param$
+    \label{fig:phase_0}
+    \end{minipage}
+    \hspace{0.05cm}
+    \begin{minipage}[b]{0.23\linewidth}
+    \centering
+    \includegraphics[width=\textwidth,height=2.5cm]{fig/phase_1.png}
+    Phase 2: low $\param$
+    \label{fig:phase_1}
+    \end{minipage}
+    \hspace{0.02cm}
+    \begin{minipage}[b]{0.23\linewidth}
+    \centering
+    \includegraphics[width=\textwidth,height=2.5cm]{fig/phase_2.png}
+    Phase 3: high $\param$
+    \label{fig:phase_2}
+    \end{minipage}
+    \hspace{0.02cm}
+    \begin{minipage}[b]{0.23\linewidth}
+    \centering
+    \includegraphics[width=\textwidth,height=2.5cm]{fig/phase_3.png}
+     Phase 4: low $\param$
+    \label{fig:phase_3}
+    \end{minipage}
+    \hspace{0.02cm}
+    \caption[Qualitative visualization of the emphasis function]{Cyclical behaviour of $\param$ on Hopper.}
+    \label{fig:visual_hopper}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.8]{fig/beta_hopper.pdf}
+    \caption[Emphasis function through the trajectory]{Behaviour of $\param$ through the trajectory.}
+    \label{fig:cyle_hopper}
+\end{figure}
+(a) The emphasis function learns to emphasize key states in the environment. The emphasis function is high when the agent is making important decisions, such as landing or taking off (Phase 1 and Phase 3). The emphasis function is low when the agent is making decisions while it is in the air (Phase 2 and Phase 4). (b) Behaviour of the emphasis function along the trajectory for various phases described in (a) for one period. The emphasis function keeps repeating the behaviour.
+\section{Discussions}
+\subsection{Temporal Credit assignment:} As mentioned earlier, we can control the flow of gradient by using emphasis function $\param_{\omega}(s_t)$ and pass gradient to the states that contributed to the reward but are located several time-steps earlier. We could potentially do credit assignment on states that are temporally far away by forcing the emphasis function between these states to be close to $0$. This setting could be useful in problems with long horizons, such as lifelong learning and continual learning.
+
+\subsection{$\param$ as an interest function:}  In Reinforcement Learning, having access to a function quantifying the \emph{interest} \citep{mahmood2015emphatic} of a state can be helpful. For example, one could decide to explore from those states, prioritize experience replay based on those states, and use $\param$ to set the $\lambda$ to bootstrap from interesting states. Indeed, bootstrapping on states with a similar value (low $\param$) than the one estimated will only result in variance. The most informative updates come from bootstrapping on states with different values (high $\param$). We also believe $\param$ to be related to the concepts of bottleneck states \citep{tishby2011information} and reversibility.
+\subsection{Partially observable domain: } As demonstrated earlier, RVFs are able to correctly estimate the value of an aliased/noisy state using the trajectory's estimate. We believe that this is a promising area to explore because, as the experiments suggest, ignoring an uninformative state can sometimes suffice to learn its value function. This is in contrast to traditional POMDP methods which attempt to infer the belief state. Smoothing the output with a gating mechanism could also be useful for sequential tasks in Supervised Learning, such as regression or classification. 
+\subsection{Adjusting for the reward:} In practice, some environments in Reinforcement Learning have
+a constant reward at every time step, potentially inducing bias in $\vr$ estimates. It would be possible to modify the RVF formulation to account for the reward that was just seen, such that $\vr(s_t) = \param V(s_t) + (1-\param) (\vr(s_{t-1}) - r_{t-1})$.
+Whether or not subtracting the reward can reduce the bias will depend on the environment considered.
+
+
+\subsection{Convergence Proof}
+
 
 \subsection
 {Derivation of $\param$ update rule}
@@ -393,68 +381,7 @@ Therefore,
 \end{align}
 
 Finally, the update rule is simply a gradient step using the above derivative.
-\subsection{Experiment}
-\subsubsection{Policy Evaluation}
-\label{Policy_evaluation_RVF}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.5\textwidth, height=6cm]{fig/policy_evaluation.pdf}
-    \caption{Comparison of RMSVE of various methods. Value Function estimated using RVF has lower error compared to Value Function estimated using TD and comparable to Eligibility traces}
-    \label{fig:policy_eval}
-\end{figure}
-In this experiment, we perform a policy evaluation on CartPole task. In this environment the agent has to balance the pole on a cart. The agent can take one of the two actions available which would move the cart to either left or right. A reward of +1 is obtained for every time step and an episode is terminated if the cart move too far from the center or the pole dips below a certain angle.
 
-In this task, we use a pretrained network to obtain the features that represent the underlying state. We train a linear function approximator using those features to estimate the value function. This experimental setup is similar to \cite{chung2018two} but the features in our case are obtained through a pretrained network instead of training a separate network. The samples are generated following a fixed policy and the same samples were used across all the methods to estimate value function. Each sample consists of 5000 transitions and the results are averaged over 40 such samples. We calculated the optimal value $V_\pi$ using a Monte Carlo estimate for 2000 random states following the same policy. We use the trained linear network to predict value function on these 2000 states. Once we get the predictions we calculate their Root Mean Square Value Error (RMSVE). The best hyperparameters were obtained through hyperparameter search for each method separately. The optimal learning rate was found to be $0.005$ for TD and RVF while $0.0005$ for eligibility traces when did a search in \{$0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05$\}. The optimal beta learning rate was found to be $0.005$ when we searched in \{$0.001, 0.0001, 0.01$\} and the optimal lambda for eligibility traces was found to be $0.9$ when searched in \{$0.1, 0.4, 0.7, 0.9$\}. The RMSVE on various methods such as TD, eligibility traces - online TD($\lambda$) and the value functions of the state obtained using RVF algorithm are reported in Figure \ref{fig:policy_eval}. We notice that the the value function learned through RVF algorithm has approximately the same error as the value function learned through eligibility traces. Both RVF and eligibility traces outperform TD methods.
-\subsubsection{Hyper-parameter TOY MDP}
-\label{hyper_toy}
-For every method the learning rate and $\lambda$ was tuned for optimal performance in the range $[0,1]$.\\
-For RTD a learning rate of 0.5 for the value function and 1 for the beta function was found to be optimal with a lambda of 0.9.\\
-For the GRU model we explored different amount of cell($\{1,5,10,15,20,25\}$) to vary the capacity of the model. The optimal number of hidden cell we found is 10, learning rate 0.5 and lambda 0.9. 
-\subsubsection{Deep Reinforcement Learning}
-\label{deep_RL_appendix}
-The best hyperparameters were selected on 10 random seeds. 
-\paragraph{PPO:} The following values were considered for the learning rate $\{3E-05,6E-05,9E-05,3E-04,6E-04\}$ and $N = \{2,5,10\}$.  The optimal values for learning rate is the same one obtained in the original PPO paper $3E-4$ and $N=5$.
-We also compare with a larger network for PPO to adjust for the additional parameter of $\param$ the performance of vanilla PPO were found to be similar. In terms of computational cost, RVF introduce a computational overhead slowing down training by a factor of 2 on a CPU(Intel Skylake cores 2.4GHz, AVX512) compared to PPO. The results are reported on 20 new random seeds and a confidence interval of $68\%$ is displayed. 
-\paragraph{A2C:} The following values were considered for the learning rate $\{1E-05,1E-04,1E-03,1E-02\}$ and the best learning rate was found to be $1E-04$. We tested bootstrapping on $5,10,15$ steps, we found no empirical improvements between $5$ and $10$ but noticed a significant drop in performance for bootstrapping $>10$. We believe that, it is due to the increase in variance of the target as we increase the steps of the bootstrapping. The best hyperparameters were found by averaging across 10 random seeds. The results reported are averaged across 20 random seeds. The confidence interval of $95\%$ is displayed.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth, height=4cm]{fig/beta_mean.pdf}
-    \caption{Mean beta values using recurrent PPO on Mujoco domains}
-    \label{fig:beta_mean}
-\end{figure}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth, height=4cm]{fig/beta_std.pdf}
-    \caption{Standard deviation of beta using recurrent PPO on Mujoco domains}
-    \label{fig:beta_std}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth, height=4cm]{fig/Rewards_a2c_mujoco_sea_steps_5_noise_obs_0_0.pdf}
-    \caption{Performance of a2c and recurrent a2c on Mujoco tasks without noise in observations for 10M steps}
-    \label{fig:a2c_no_noise_full}
-\end{figure}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\textwidth, height=4cm]{fig/Rewards_a2c_mujoco_sea_steps_5_noise_obs_0_1.pdf}
-    \caption{Performance of a2c and recurrent a2c on Mujoco tasks with a Gaussian noise(0.1) in observations for 10M steps}
-    \label{fig:a2c_noise_full}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth, height=4cm]{fig/beta_mean_a2c_mujoco_sea_steps_5_noise_obs_0_1.pdf}
-    \caption{The mean of the emphasis function on various Mujoco tasks with and without noise plotted against the number of updates}
-    \label{fig:beta_mean_a2c_mujoco}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth, height=4cm]{fig/beta_mean_a2c_mujoco_sea_steps_5_noise_obs_0_1.pdf}
-    \caption{The standard deviation of the emphasis function on various Mujoco tasks with and without noise plotted against the number of updates}
-    \label{fig:beta_std_a2c_mujoco}
-\end{figure}
 
 
 
